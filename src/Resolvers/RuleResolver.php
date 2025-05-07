@@ -83,8 +83,8 @@ class RuleResolver implements RuleResolverInterface
                         $this->makeComboQuery($builder, $relationField, $mixType, $operatorAndValue);
                     });
                 } else {
-                    $this->builder->where(function ($builder) use ($field, $mixType, $operatorAndValue) {
-                        $this->makeComboQuery($builder, $field, $mixType, $operatorAndValue);
+                    $this->builder->where(function ($builder) use ($internalField, $mixType, $operatorAndValue) {
+                        $this->makeComboQuery($builder, $internalField, $mixType, $operatorAndValue);
                     });
                 }
             }
