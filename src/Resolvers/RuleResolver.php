@@ -45,9 +45,7 @@ class RuleResolver implements RuleResolverInterface
             } else {
                 $field = is_int($key) ? $item : $key;
 
-                $pattern = '/^(?:([\w-]+):)?([\w.\-$]+)(?:\|([\w-]+))?$/';
-
-                if (! preg_match($pattern, $field, $matches)) {
+                if (! preg_match('/^(?:([\w-]+):)?([\w.\-$]+)(?:\|([\w-]+))?$/', $field, $matches)) {
                     throw new InvalidArgumentException('Invalid field:'.$field);
                 }
 
