@@ -58,9 +58,9 @@ class RuleResolver implements RuleResolverInterface
             }
 
             $value = Arr::get($this->input, $sourceField);
-            $isValueResolver = $item instanceof ValueResolver;
 
             if (! is_int($key)) {
+                $isValueResolver = $item instanceof ValueResolver;
                 $value = match (true) {
                     $isValueResolver && ! $this->isMeaninglessValue($value) => $item->resolve($value),
                     ! $isValueResolver => $item,
@@ -89,7 +89,6 @@ class RuleResolver implements RuleResolverInterface
                     $this->makeComboQuery($builder, $internalField, $mixType, $operatorAndValue);
                 });
             }
-
         }
 
         return $this->builder;
