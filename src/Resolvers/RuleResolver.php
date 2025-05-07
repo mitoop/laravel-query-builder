@@ -63,11 +63,17 @@ class RuleResolver implements RuleResolverInterface
                 }
 
                 $value = Arr::get($this->input, $sourceField);
+                $isValueResolver = $item instanceof ValueResolver;
+
                 if (! is_int($key)) {
-                    $value = $item instanceof ValueResolver ? $item->resolve($value) : $item;
+                    $value = match (true) {
+                        $isValueResolver && ! $this->isMeaninglessValue($value) => $item->resolve($value),
+                        ! $isValueResolver => $item,
+                        default => $value,
+                    };
                 }
 
-                if (is_null($value) || $value === '' || $value === []) {
+                if ($this->isMeaninglessValue($value)) {
                     continue;
                 }
 
@@ -132,5 +138,10 @@ class RuleResolver implements RuleResolverInterface
         ];
 
         return $operatorMap[$operator] ?? $operator;
+    }
+
+    protected function isMeaninglessValue(mixed $value): bool
+    {
+        return $value === null || $value === '' || $value === [];
     }
 }
