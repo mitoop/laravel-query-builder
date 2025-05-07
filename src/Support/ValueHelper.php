@@ -51,6 +51,13 @@ class ValueHelper
             return null;
         }
 
+        if (in_array($operator, ['is', 'is_not'], true)) {
+            if (! $value) {
+                return null;
+            }
+            $value = true;
+        }
+
         $operator = is_array($item) ? $item : [$operator => $value];
 
         return [
