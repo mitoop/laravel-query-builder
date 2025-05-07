@@ -6,13 +6,12 @@ use Closure;
 use Illuminate\Database\Eloquent\Attributes\Scope as ScopeAttr;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Query\Expression;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
 use Mitoop\LaravelQueryBuilder\Contracts\RuleResolverInterface;
-use Mitoop\LaravelQueryBuilder\Contracts\ValueResolver;
 use Mitoop\LaravelQueryBuilder\Scope;
+use Mitoop\LaravelQueryBuilder\Support\ValueHelper;
 use ReflectionMethod;
 
 class RuleResolver implements RuleResolverInterface
@@ -40,55 +39,30 @@ class RuleResolver implements RuleResolverInterface
                 continue;
             }
 
-            $field = is_int($key) ? $item : $key;
+            $resolved = ValueHelper::resolveField($key, $item, $this->input);
 
-            if (! preg_match('/^(?:([\w-]+):)?([\w.\-$]+)(?:\|([\w-]+))?$/', $field, $matches)) {
-                throw new InvalidArgumentException('Invalid field:'.$field);
-            }
-
-            $sourceField = $matches[1] ?? null;
-            $internalField = $matches[2] ?? null;
-            $operator = $matches[3] ?? 'eq';
-
-            if (empty($sourceField)) {
-                if (! preg_match('/(?:[\w-]+[.$])?([\w-]+)$/', $internalField, $subMatch)) {
-                    throw new InvalidArgumentException('Invalid field format:'.$field);
-                }
-                $sourceField = $subMatch[1];
-            }
-
-            $value = Arr::get($this->input, $sourceField);
-
-            if (! is_int($key)) {
-                $isValueResolver = $item instanceof ValueResolver;
-                $value = match (true) {
-                    $isValueResolver && ! $this->isMeaninglessValue($value) => $item->resolve($value),
-                    ! $isValueResolver => $item,
-                    default => $value,
-                };
-            }
-
-            if ($this->isMeaninglessValue($value)) {
+            if (is_null($resolved)) {
                 continue;
             }
 
-            $operatorAndValue = is_array($item) ? $item : [$operator => $value];
-            $mixType = strtolower(Arr::pull($operatorAndValue, 'mix', 'and'));
+            ['field' => $field, 'mix' => $mix, 'operator' => $operator] = $resolved;
 
-            if (str_contains($internalField, '$')) {
-                [$relation, $relationField] = explode('$', $internalField, 2);
-                $this->builder->whereHas(Str::camel($relation), function ($builder) use (
-                    $operatorAndValue,
-                    $mixType,
+            if (str_contains($field, '$')) {
+                [$relation, $relationField] = explode('$', $field, 2);
+                $this->builder->whereHas(Str::camel($relation), function (Builder $builder) use (
+                    $operator,
+                    $mix,
                     $relationField
                 ) {
-                    $this->makeComboQuery($builder, $relationField, $mixType, $operatorAndValue);
+                    $this->makeComboQuery($builder, $relationField, $mix, $operator);
                 });
-            } else {
-                $this->builder->where(function ($builder) use ($internalField, $mixType, $operatorAndValue) {
-                    $this->makeComboQuery($builder, $internalField, $mixType, $operatorAndValue);
-                });
+
+                continue;
             }
+
+            $this->builder->where(function (Builder $builder) use ($field, $mix, $operator) {
+                $this->makeComboQuery($builder, $field, $mix, $operator);
+            });
         }
 
         return $this->builder;
@@ -111,27 +85,23 @@ class RuleResolver implements RuleResolverInterface
         $this->builder->{$method}(...$args);
     }
 
-    protected function makeComboQuery($builder, $field, $mixType, $operatorAndValue): void
+    protected function makeComboQuery(Builder $builder, $field, $mixType, $operatorAndValue): void
     {
         $whereType = $mixType === 'and' ? 'where' : 'orWhere';
 
         foreach ($operatorAndValue as $operator => $value) {
             if ($operator === 'in') {
                 if ((is_array($value) || $value instanceof Collection) && ! empty($value)) {
-                    $method = "{$whereType}In";
-                    $builder->{$method}($field, $value);
+                    $builder->{"{$whereType}In"}($field, $value);
                 }
             } elseif ($operator === 'not_in') {
                 if (is_array($value) && ! empty($value)) {
-                    $method = "{$whereType}NotIn";
-                    $builder->{$method}($field, $value);
+                    $builder->{"{$whereType}NotIn"}($field, $value);
                 }
             } elseif ($operator === 'is') {
-                $method = $whereType.'Null';
-                $builder->{$method}($field);
+                $builder->{"{$whereType}Null"}($field);
             } elseif (Str::snake($operator) === 'is_not') {
-                $method = $whereType.'NotNull';
-                $builder->{$method}($field);
+                $builder->{"{$whereType}NotNull"}($field);
             } else {
                 $builder->{$whereType}($field, $this->convertOperator($operator), $value);
             }
@@ -150,10 +120,5 @@ class RuleResolver implements RuleResolverInterface
             'lte' => '<=',
             'le' => '<=',
         ][$operator] ?? $operator;
-    }
-
-    protected function isMeaninglessValue(mixed $value): bool
-    {
-        return $value === null || $value === '' || $value === [];
     }
 }

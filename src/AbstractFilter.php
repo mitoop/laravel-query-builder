@@ -9,6 +9,7 @@ use Illuminate\Support\Arr;
 use Mitoop\LaravelQueryBuilder\Contracts\BuilderAwareInterface;
 use Mitoop\LaravelQueryBuilder\Contracts\FilterAwareInterface;
 use Mitoop\LaravelQueryBuilder\Contracts\ResolverInterface;
+use Mitoop\LaravelQueryBuilder\Support\ValueHelper;
 use Mitoop\LaravelQueryBuilder\Traits\HasBuilder;
 
 abstract class AbstractFilter implements BuilderAwareInterface
@@ -46,7 +47,7 @@ abstract class AbstractFilter implements BuilderAwareInterface
     {
         $value = Arr::get($this->data, $field);
 
-        if ($value === null || $value === [] || $value === '') {
+        if (ValueHelper::isMeaningless($value)) {
             return null;
         }
 
@@ -76,7 +77,7 @@ abstract class AbstractFilter implements BuilderAwareInterface
                             $resolver->withFilter($this);
                         }
 
-                        return $resolver->resolve();
+                        $resolver->resolve();
                     });
             }
         }
