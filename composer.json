@@ -15,5 +15,10 @@
     ],
     "require": {
         "laravel/framework": "^12.12"
+    },
+    "extra": {
+        "laravel": {
+            "providers": ["Mitoop\\LaravelQueryBuilder\\ServiceProvider"]
+        }
     }
 }
