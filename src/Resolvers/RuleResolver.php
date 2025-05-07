@@ -76,7 +76,7 @@ class RuleResolver implements RuleResolverInterface
                 }
 
                 $operatorAndValue = is_array($item) ? $item : [$operator => $value];
-                $mixType = Arr::pull($operatorAndValue, 'mix', 'and');
+                $mixType = strtolower(Arr::pull($operatorAndValue, 'mix', 'and'));
 
                 if (str_contains($internalField, '$')) {
                     [$relation, $relationField] = explode('$', $internalField);
