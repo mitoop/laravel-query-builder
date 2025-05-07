@@ -58,7 +58,7 @@ class ValueHelper
             $value = true;
         }
 
-        $operator = is_array($item) ? $item : [$operator => $value];
+        $operator = (in_array($operator, ['in', 'not_in', 'between'], true) && is_array($item)) ? $item : [$operator => $value];
 
         return [
             'field' => $internalField,
