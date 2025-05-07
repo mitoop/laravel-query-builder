@@ -1,0 +1,15 @@
+<?php
+
+namespace {{ namespace }};
+
+use Mitoop\LaravelQueryBuilder\AbstractFilter;
+
+class {{ class }} extends AbstractFilter
+{
+    protected array $allowedSorts = ['id'];
+
+    protected function rules(): array
+    {
+        return [];
+    }
+}

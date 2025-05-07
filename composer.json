@@ -1,0 +1,19 @@
+{
+    "name": "mitoop/laravel-query-builder",
+    "type": "library",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Mitoop\\LaravelQueryBuilder\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "mitoop",
+            "email": "me@mitoop.com"
+        }
+    ],
+    "require": {
+        "laravel/framework": "^12.12"
+    }
+}
