@@ -6,7 +6,6 @@ use Closure;
 use Illuminate\Database\Eloquent\Attributes\Scope as ScopeAttr;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Query\Expression;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
 use Mitoop\LaravelQueryBuilder\Contracts\RuleResolverInterface;
@@ -91,7 +90,7 @@ class RuleResolver implements RuleResolverInterface
 
         foreach ($operator as $key => $value) {
             if ($key === 'in') {
-                if ((is_array($value) || $value instanceof Collection) && ! empty($value)) {
+                if (is_array($value) && ! empty($value)) {
                     $builder->{"{$whereType}In"}($field, $value);
                 }
             } elseif ($key === 'not_in') {
@@ -102,6 +101,10 @@ class RuleResolver implements RuleResolverInterface
                 $builder->{"{$whereType}Null"}($field);
             } elseif (Str::snake($key) === 'is_not') {
                 $builder->{"{$whereType}NotNull"}($field);
+            } elseif ($key === 'between') {
+                if (is_array($value) && ! empty($value)) {
+                    $builder->{"{$whereType}Between"}($field, $value);
+                }
             } else {
                 $builder->{$whereType}($field, $this->convertOperator($key), $value);
             }
