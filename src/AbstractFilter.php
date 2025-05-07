@@ -37,7 +37,10 @@ abstract class AbstractFilter implements BuilderAwareInterface
 
     abstract protected function rules(): array;
 
-    abstract protected function sorts(): array;
+    protected function sorts(): array
+    {
+        return [];
+    }
 
     protected function value($field, ?Closure $closure = null)
     {

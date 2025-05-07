@@ -12,9 +12,4 @@ class {{ class }} extends AbstractFilter
     {
         return [];
     }
-
-    protected function sorts(): array
-    {
-        return [];
-    }
 }
