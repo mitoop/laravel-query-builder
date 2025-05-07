@@ -51,7 +51,7 @@ class RuleResolver implements RuleResolverInterface
 
                 $sourceField = $matches[1] ?? null;
                 $internalField = $matches[2] ?? null;
-                $operator = $matches[3] ?? null;
+                $operator = $matches[3] ?? 'eq';
 
                 if (empty($sourceField)) {
                     if (! preg_match('/(?:[\w-]+[.$])?([\w-]+)$/', $field, $subMatch)) {
@@ -75,8 +75,9 @@ class RuleResolver implements RuleResolverInterface
                     continue;
                 }
 
-                $mixType = 'and';
-                $operatorAndValue = is_array($item) ? $item : [$operator ?: 'eq' => $value];
+                $operatorAndValue = is_array($item) ? $item : [$operator => $value];
+                $mixType = Arr::pull($operatorAndValue, 'mix', 'and');
+
                 if (str_contains($internalField, '$')) {
                     [$relation, $relationField] = explode('$', $internalField);
                     $this->builder->whereHas(Str::camel($relation), function ($builder) use (
