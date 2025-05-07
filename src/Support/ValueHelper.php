@@ -51,13 +51,12 @@ class ValueHelper
             return null;
         }
 
-        $operatorAndValue = is_array($item) ? $item : [$operator => $value];
-        $mixType = strtolower(Arr::pull($operatorAndValue, 'mix', 'and'));
+        $operator = is_array($item) ? $item : [$operator => $value];
 
         return [
             'field' => $internalField,
-            'mix' => $mixType,
-            'operator' => $operatorAndValue,
+            'mix' => strtolower(Arr::pull($operator, 'mix', 'and')),
+            'operator' => $operator,
         ];
     }
 }

@@ -85,25 +85,25 @@ class RuleResolver implements RuleResolverInterface
         $this->builder->{$method}(...$args);
     }
 
-    protected function makeComboQuery(Builder $builder, $field, $mixType, $operatorAndValue): void
+    protected function makeComboQuery(Builder $builder, $field, $mix, $operator): void
     {
-        $whereType = $mixType === 'and' ? 'where' : 'orWhere';
+        $whereType = $mix === 'and' ? 'where' : 'orWhere';
 
-        foreach ($operatorAndValue as $operator => $value) {
-            if ($operator === 'in') {
+        foreach ($operator as $key => $value) {
+            if ($key === 'in') {
                 if ((is_array($value) || $value instanceof Collection) && ! empty($value)) {
                     $builder->{"{$whereType}In"}($field, $value);
                 }
-            } elseif ($operator === 'not_in') {
+            } elseif ($key === 'not_in') {
                 if (is_array($value) && ! empty($value)) {
                     $builder->{"{$whereType}NotIn"}($field, $value);
                 }
-            } elseif ($operator === 'is') {
+            } elseif ($key === 'is') {
                 $builder->{"{$whereType}Null"}($field);
-            } elseif (Str::snake($operator) === 'is_not') {
+            } elseif (Str::snake($key) === 'is_not') {
                 $builder->{"{$whereType}NotNull"}($field);
             } else {
-                $builder->{$whereType}($field, $this->convertOperator($operator), $value);
+                $builder->{$whereType}($field, $this->convertOperator($key), $value);
             }
         }
     }
