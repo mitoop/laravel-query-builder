@@ -54,7 +54,7 @@ class RuleResolver implements RuleResolverInterface
                 $operator = $matches[3] ?? 'eq';
 
                 if (empty($sourceField)) {
-                    if (! preg_match('/(?:[\w-]+[.$])?([\w-]+)$/', $field, $subMatch)) {
+                    if (! preg_match('/(?:[\w-]+[.$])?([\w-]+)$/', $internalField, $subMatch)) {
                         throw new InvalidArgumentException('Invalid field format:'.$field);
                     }
                     $sourceField = $subMatch[1];
