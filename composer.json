@@ -14,7 +14,7 @@
         }
     ],
     "require": {
-        "laravel/framework": "^12.12"
+        "laravel/framework": "^11|^12"
     },
     "extra": {
         "laravel": {
