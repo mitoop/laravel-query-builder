@@ -106,6 +106,9 @@ class RuleResolver implements RuleResolverInterface
                     $builder->{"{$whereType}Between"}($field, $value);
                 }
             } else {
+                if (is_array($value)) {
+                    $value = reset($value);
+                }
                 $builder->{$whereType}($field, $this->convertOperator($key), $value);
             }
         }
