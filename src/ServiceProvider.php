@@ -3,6 +3,7 @@
 namespace Mitoop\LaravelQueryBuilder;
 
 use Illuminate\Database\Eloquent\Builder;
+use InvalidArgumentException;
 use Mitoop\LaravelQueryBuilder\Commands\MakeFilterCommand;
 use Mitoop\LaravelQueryBuilder\Contracts\RuleResolverInterface;
 use Mitoop\LaravelQueryBuilder\Contracts\SortResolverInterface;
@@ -27,14 +28,27 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
         /**
          * @return \Illuminate\Database\Eloquent\Builder
          */
-        Builder::macro('filter', function (string $filterClass, array $data = []) {
-            /** @var Builder $this */
-            $filter = tap(app($filterClass), fn (AbstractFilter $filter) => $filter->withBuilder($this));
+        Builder::macro('filter', function (string|array $filterClass, array $data = []) {
+            $filter = is_array($filterClass)
+                ? new class($filterClass) extends AbstractFilter
+                {
+                    public function __construct(protected array $rules) {}
 
-            /** @var AbstractFilter $filter */
-            $filter->setData($data ?: request()->all());
-            $filter->addResolver('rules', RuleResolverInterface::class);
-            $filter->addResolver('sorts', SortResolverInterface::class);
+                    public function rules(): array
+                    {
+                        return $this->rules;
+                    }
+                }
+            : app($filterClass);
+
+            if (! $filter instanceof AbstractFilter) {
+                throw new InvalidArgumentException('Filter must be instance of AbstractFilter');
+            }
+
+            $filter->withBuilder($this)
+                ->setData($data ?: request()->all())
+                ->addResolver('rules', RuleResolverInterface::class)
+                ->addResolver('sorts', SortResolverInterface::class);
 
             return $filter();
         });
