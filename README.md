@@ -20,13 +20,13 @@ composer require mitoop/laravel-query-builder
 ```
 
 ## 使用
-在模型上（无论是静态调用还是实例调用）使用 filter 方法，并传入对应的 Filter 类即可。只需在 Filter 类中定义好相关的搜索规则，便能快速构建查询逻辑。
+在模型上（无论是静态调用还是实例调用）使用 `filter` 方法，并传入对应的 `Filter` 类即可。只需在 `Filter` 类中定义好相关的搜索规则，便能快速构建查询逻辑。
 
-所有与搜索/排序相关的逻辑都集中定义在 Filter 类中，实现了与控制器的彻底解耦，结构清晰、职责单一，便于维护和扩展。
+所有与搜索/排序相关的逻辑都集中定义在 `Filter` 类中，实现了与控制器的彻底解耦，结构清晰、职责单一，便于维护和扩展。
 
-调用 filter 后，返回的依然是标准的 Laravel 查询构建器（Query Builder），因此你可以继续链式调用如 with、paginate、get 等方法，保留原有的使用习惯与灵活性。
+调用 `filter` 后，返回的依然是标准的 Laravel 查询构建器（Query Builder），因此你可以继续链式调用如 with、paginate、get 等方法，保留原有的使用习惯与灵活性。
 
-此外，我们还提供了便捷的 Artisan 命令 php artisan make:filter，可快速生成符合规范的 Filter 类，提升开发效率。
+此外，我们还提供了便捷的 Artisan 命令 `php artisan make:filter`，可快速生成符合规范的 `Filter` 类，提升开发效率。
 
 ```php
 class UserFilter extends AbstractFilter
@@ -39,6 +39,40 @@ class UserFilter extends AbstractFilter
     }
 }
 ```
-为了清晰地描述搜索逻辑，我们为 rules 制定了一套轻量级的领域特定语言（DSL）。语法设计简单直观，不需要复杂的学习成本——接下来我们将一步步带你了解它的用法。
+
+#### 定义搜索规则：rules 方法
+所有搜索逻辑都通过 rules 方法集中定义。为了更清晰、统一地描述这些规则，我们为 rules 提供了一套简洁的领域特定语言（DSL）。语法直观，使用门槛低，便于快速上手。
+
+在 rules 方法中，你可以同时使用 索引数组（Indexed Array） 和 关联数组（Associative Array） 的形式，两者可以混合存在，系统会自动进行统一解析。
+
+```php
+      protected function rules(): array
+      {
+          return [
+              'name'
+              'email|like' => $this->value('email', fn($email)=> "%{$email}%"),
+          ];
+      }
+```
+##### 规则解析
+- 对于 name 字段，如果未显式指定操作符（操作符统一通过 | 分隔），系统默认使用 eq（等于）操作。也就是说，'name' 会被解析为 name = ? 的查询条件，字段对应的值则自动从前端传入的 name 请求参数中获取。
+如果该参数在请求中未传入，系统会自动忽略这条规则，不会将其纳入查询条件中。
+
+- 在 email 字段中，我们显式指定了操作符 like，因此系统会将其解析为 email LIKE ? 的查询条件。字段的值通过 `$this->value('email', fn($email) => "%{$email}%")` 获取：
+  1. 第一个参数为请求中字段的名称（如 email）；
+  2. 第二个参数是可选的闭包函数，用于对原始值进行处理，比如添加通配符 % 实现模糊查询。
+
+值得注意的是：如果传入的参数值为空，value 方法会自动舍弃该规则，避免拼接无意义的查询条件。
+
+另外，当请求参数的名称与数据库字段名称不一致时，你可以使用 请求参数名:字段名 的格式来进行映射。例如：`'name_alias:name'`
+表示前端传入的参数是 name_alias，但实际查询的字段为 name，系统会自动解析并应用到查询中。这种写法非常适合字段命名不一致的场景，简洁直观。
+
+类似地，对于 email 字段，也可以使用 `'email_alias:email|like'` 的写法，表示从请求中获取 email_alias 的值，应用到数据库字段 email 上，并使用 LIKE 操作。
+
+
+
+
+
+
 
 
