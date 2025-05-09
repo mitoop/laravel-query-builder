@@ -9,12 +9,17 @@ use Mitoop\LaravelQueryBuilder\Contracts\RuleResolverInterface;
 use Mitoop\LaravelQueryBuilder\Contracts\SortResolverInterface;
 use Mitoop\LaravelQueryBuilder\Resolvers\RuleResolver;
 use Mitoop\LaravelQueryBuilder\Resolvers\SortResolver;
+use Mitoop\LaravelQueryBuilder\Support\Operator\OperatorManager;
 
 class ServiceProvider extends \Illuminate\Support\ServiceProvider
 {
     public $bindings = [
         RuleResolverInterface::class => RuleResolver::class,
         SortResolverInterface::class => SortResolver::class,
+    ];
+
+    public $singletons = [
+        OperatorManager::class => OperatorManager::class,
     ];
 
     public function boot(): void

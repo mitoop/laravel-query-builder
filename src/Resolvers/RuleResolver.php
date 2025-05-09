@@ -10,6 +10,7 @@ use Illuminate\Support\Str;
 use InvalidArgumentException;
 use Mitoop\LaravelQueryBuilder\Contracts\RuleResolverInterface;
 use Mitoop\LaravelQueryBuilder\Scope;
+use Mitoop\LaravelQueryBuilder\Support\Operator\OperatorManager;
 use Mitoop\LaravelQueryBuilder\Support\ValueHelper;
 use ReflectionMethod;
 
@@ -89,44 +90,7 @@ class RuleResolver implements RuleResolverInterface
         $whereType = $mix === 'and' ? 'where' : 'orWhere';
 
         foreach ($operator as $key => $value) {
-            if ($key === 'in') {
-                if (is_array($value) && ! empty($value)) {
-                    $builder->{"{$whereType}In"}($field, $value);
-                }
-            } elseif ($key === 'not_in') {
-                if (is_array($value) && ! empty($value)) {
-                    $builder->{"{$whereType}NotIn"}($field, $value);
-                }
-            } elseif ($key === 'is') {
-                $builder->{"{$whereType}Null"}($field);
-            } elseif (Str::snake($key) === 'is_not') {
-                $builder->{"{$whereType}NotNull"}($field);
-            } elseif ($key === 'between') {
-                if (is_array($value) && ! empty($value)) {
-                    $builder->{"{$whereType}Between"}($field, $value);
-                }
-            } elseif ($key === 'json_contains') {
-                $builder->{"{$whereType}JsonContains"}($field, $value);
-            } else {
-                if (is_array($value)) {
-                    $value = reset($value);
-                }
-                $builder->{$whereType}($field, $this->convertOperator($key), $value);
-            }
+            app(OperatorManager::class)->use($key)->apply($builder, $whereType, $field, $value);
         }
-    }
-
-    protected function convertOperator(string $operator): string
-    {
-        return [
-            'eq' => '=',
-            'ne' => '<>',
-            'gt' => '>',
-            'gte' => '>=',
-            'ge' => '>=',
-            'lt' => '<',
-            'lte' => '<=',
-            'le' => '<=',
-        ][$operator] ?? $operator;
     }
 }
