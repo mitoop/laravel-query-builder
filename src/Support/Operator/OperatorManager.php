@@ -55,16 +55,7 @@ class OperatorManager extends Manager
             return $this->$method();
         }
 
-        if (in_array($driver, ['eq', 'ne', 'gt', 'gte', 'ge', 'lt', 'lte', 'le'])) {
-            return $this->useDefaultDriver($driver);
-        }
-
-        throw new InvalidArgumentException("Driver [$driver] not supported.");
-    }
-
-    protected function useDefaultDriver(string $operator): DefaultOperator
-    {
-        return new DefaultOperator($operator);
+        return new DefaultOperator($driver);
     }
 
     public function getDefaultDriver(): string
