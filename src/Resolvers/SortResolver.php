@@ -75,7 +75,7 @@ class SortResolver implements FilterAwareInterface, SortResolverInterface
         })->call($this->filter);
     }
 
-    public static function sortByField(string $field): void
+    public static function sortFieldUsing(string $field): void
     {
         static::$sortField = $field;
     }
