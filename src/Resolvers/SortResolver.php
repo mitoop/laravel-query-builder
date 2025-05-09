@@ -12,6 +12,8 @@ class SortResolver implements FilterAwareInterface, SortResolverInterface
 {
     use HasFilter;
 
+    protected static string $sortField = 'sorts';
+
     public function __construct(protected Builder $builder, protected array $definition, protected array $input) {}
 
     public function resolve(): Builder
@@ -39,7 +41,7 @@ class SortResolver implements FilterAwareInterface, SortResolverInterface
             return [];
         }
 
-        $sorts = Arr::get($this->input, 'sorts', []);
+        $sorts = Arr::get($this->input, static::$sortField);
 
         $normalizedSorts = [];
         if ($sorts && is_string($sorts)) {
@@ -71,5 +73,10 @@ class SortResolver implements FilterAwareInterface, SortResolverInterface
         return (function () {
             return $this->allowedSorts;
         })->call($this->filter);
+    }
+
+    public static function sortByField(string $field): void
+    {
+        static::$sortField = $field;
     }
 }
