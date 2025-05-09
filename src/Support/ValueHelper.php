@@ -21,7 +21,7 @@ class ValueHelper
             return null;
         }
 
-        if (! preg_match('/^(?:([\w-]+):)?([\w.\-$]+)(?:\|([\w-]+))?$/', $field, $matches)) {
+        if (! preg_match('/^(?:([\w\-]+):)?([\w.\-$>]+)(?:\|([\w\-]+))?$/', $field, $matches)) {
             throw new InvalidArgumentException('Invalid field:'.$field);
         }
 
@@ -30,7 +30,7 @@ class ValueHelper
         $operator = $matches[3] ?? 'eq';
 
         if (empty($sourceField)) {
-            if (! preg_match('/(?:[\w-]+[.$])?([\w-]+)$/', $internalField, $subMatch)) {
+            if (! preg_match('/(?:[\w\-]+[.$])?([\w>\-]+)$/', $internalField, $subMatch)) {
                 throw new InvalidArgumentException('Invalid field format:'.$field);
             }
             $sourceField = $subMatch[1];
