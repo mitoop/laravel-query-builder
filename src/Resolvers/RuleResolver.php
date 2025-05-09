@@ -105,6 +105,8 @@ class RuleResolver implements RuleResolverInterface
                 if (is_array($value) && ! empty($value)) {
                     $builder->{"{$whereType}Between"}($field, $value);
                 }
+            } elseif ($key === 'json_contains') {
+                $builder->{"{$whereType}JsonContains"}($field, $value);
             } else {
                 if (is_array($value)) {
                     $value = reset($value);
