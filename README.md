@@ -210,13 +210,19 @@ class UserFilter extends AbstractFilter
 ```
 
 ## 高级特性
-查询解析与排序解析的核心逻辑，分别由 RuleResolverInterface 和 SortResolverInterface 接口负责。
+本包的查询与排序解析，分别由 RuleResolverInterface 与 SortResolverInterface 接口驱动。
+你可以通过绑定自定义实现，来完全替换默认行为，适配更复杂的业务需求。
 
-你可以通过自定义这两个接口的实现，完全覆盖默认的解析行为，以适配更复杂或特殊的业务需求。
+此外，包内默认仅内建了搜索与排序两类解析器；但你也可以通过 `addResolver` 方法扩展自定义解析器，处理其他类型的查询逻辑。
 
-当前系统默认仅支持搜索与排序，但你也可以通过 addResolver 方法注册自定义解析器，扩展更多类型的查询逻辑，实现更灵活的数据处理能力。
+⚠️ 建议：此能力面向高级用户，推荐具备 Laravel 包开发及丰富接口编程经验的开发者使用，确保扩展的稳定性与一致性。
 
+## 贡献
 
+有什么新的想法和建议，欢迎提交 [issue](https://github.com/mitoop/laravel-query-builder/issues) 或者 [Pull Requests](https://github.com/mitoop/laravel-query-builder/pulls)。
 
+## 协议
+
+MIT
 
 
