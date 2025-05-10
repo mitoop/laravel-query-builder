@@ -85,12 +85,12 @@ class RuleResolver implements RuleResolverInterface
         $this->builder->{$method}(...$args);
     }
 
-    protected function makeComboQuery(Builder $builder, $field, $mix, $operator): void
+    protected function makeComboQuery(Builder $builder, $field, $mix, $operatorAndValue): void
     {
         $whereType = $mix === 'and' ? 'where' : 'orWhere';
 
-        foreach ($operator as $key => $value) {
-            app(OperatorManager::class)->use($key)->apply($builder, $whereType, $field, $value);
+        foreach ($operatorAndValue as $operator => $value) {
+            app(OperatorManager::class)->use($operator)->apply($builder, $whereType, $field, $value);
         }
     }
 }
