@@ -88,24 +88,6 @@ class NewOperator implements OperatorInterface
    }
 }
 ```
-
-默认支持以下操作符：
-- eq：等于
-- ne：不等于
-- gt：大于
-- lt：小于
-- gte：大于等于
-- lte：小于等于
-- like：模糊查询
-- in：包含
-- not_in：不包含
-- between：范围查询
-- is_null：判断字段值是否为 NULL。仅当传入值等效为 true 时，才会应用该条件，筛选字段值为 NULL 的数据；否则忽略此规则。
-- not_null：判断字段值是否不为 NULL。仅当传入值等效为 true 时，才会应用该条件，筛选字段值不为 NULL 的数据；否则忽略此规则。
-- json_contains：检查 JSON 字段是否包含指定值
-
-此外，你还可以自定义扩展操作符，但操作符名称需满足仅包含 **小写字母、下划线（_）或中划线（-）** 的格式规范。
-
 ### 值处理器：ValueResolver
 将频繁出现的值处理逻辑提取为 `ValueResolver` 类，提升可复用性。
 ```php
