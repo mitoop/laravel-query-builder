@@ -33,14 +33,14 @@ class OperatorManager extends Manager
         return new BetweenOperator;
     }
 
-    protected function createIsDriver()
+    protected function createIsNullDriver()
     {
         return new IsNullOperator;
     }
 
-    protected function createIsNotDriver()
+    protected function createNotNullDriver()
     {
-        return new IsNotNullOperator;
+        return new NotNullOperator;
     }
 
     protected function createDriver($driver)

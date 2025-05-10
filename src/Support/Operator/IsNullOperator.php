@@ -8,6 +8,8 @@ class IsNullOperator implements OperatorInterface
 {
     public function apply(Builder $builder, string $whereType, string $field, $value): void
     {
-        $builder->{"{$whereType}Null"}($field);
+        if ($value) {
+            $builder->{"{$whereType}Null"}($field);
+        }
     }
 }
