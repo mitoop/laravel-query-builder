@@ -145,7 +145,7 @@ class Like implements Mitoop\LaravelQueryBuilder\Contracts\ValueResolver
 ```
 同样的，如果 email 的值为空，系统会自动忽略这条规则。 Like 类只是一个简单的示例，你可以根据实际需求实现更复杂的逻辑。
 
-### 更多
+### 进阶支持
 rules 方法内还支持以下功能：
 - RAW：直接使用原始 SQL 查询。
 - 闭包：支持通过闭包实现自定义查询逻辑。
@@ -175,9 +175,39 @@ protected function rules(): array
 }
 ```
 
+### 排序
+除了搜索，系统同样支持多字段排序。
 
+默认情况下，会从前端请求中的 sorts 字段获取排序规则。例如：sorts=-id,name 表示按 id 降序、name 升序排序；多个字段可组合使用，- 用于表示降序。
 
+为确保排序字段的安全性，你可以在 Filter 类中定义 $allowedSorts 属性，用于声明允许排序的字段列表。系统会自动校验前端传入的字段是否在该列表中，未被允许的字段将被忽略。
 
+此外，你也可以通过在 ServiceProvider 的 boot 方法中调用：
+```php
+SortResolver::sortFieldUsing('your_custom_field');
+```
+自定义从前端哪个字段中提取排序规则。
+
+如果你希望完全控制排序规则，可以在 Filter 类中定义 sorts 方法，手动指定排序逻辑。
+此方式将覆盖默认的排序行为，并且不会受 $allowedSorts 限制。
+```php
+class UserFilter extends AbstractFilter
+{
+    protected function rules(): array
+    {
+        return [];
+    }
+    
+    protected function sorts(): array
+    {
+        // 支持以下两种写法
+        return [
+            'id' => 'desc', // 键值对形式
+            'id desc', // 字符串形式
+        ];
+    }
+}
+```
 
 
 
