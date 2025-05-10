@@ -1,6 +1,6 @@
 # Laravel Query Builder
 
-Laravel Query Builder 是一个基于接口设计、具备高可替换性与高扩展性的渐进式 Laravel 搜索构建包，旨在让复杂查询的实现更清晰、更简洁、更高效。
+Laravel Query Builder 是一个基于接口设计、具备高度可替换性与扩展性的渐进式搜索构建包
 
 在大多数系统中，中后台都是不可或缺的组成部分，而列表搜索功能则是最常见、最重复的开发场景之一。为此，我们构建了这个包：以接口为核心，提供清晰、可维护且强大的搜索逻辑构建能力，助你一步一步接近业务的真实需求。
 
@@ -20,7 +20,9 @@ composer require mitoop/laravel-query-builder
 ```
 
 ## 快速使用
-在模型上使用 `filter` 方法，传入对应的 `Filter` 类，即可构建查询逻辑。相关的搜索规则集中定义在 `Filter` 中，实现了与控制器的彻底解耦。
+本包通过 Filter 类将所有搜索逻辑与控制器彻底解耦，支持高可维护性和强扩展性的查询构建。
+
+在模型上调用 `filter` 方法并传入对应的 `Filter` 类，即可构建查询逻辑，实现与控制器的彻底解耦。
 ```php
 class UserFilter extends AbstractFilter
 {
@@ -59,7 +61,7 @@ php artisan make:filter UserFilter
 'name_alias:name' // 请求参数为 name_alias，实际查询 name 字段
 'email_alias:email|like' // 请求参数 email_alias，查询 email 字段，使用 like 操作
 ```
-完整的字段规则是 **<前端字段>:<数据库字段>|<操作符>** 的格式
+字段规则完整格式为：**[前端字段名]:[数据库字段]|[操作符]**，其中冒号与竖线均为可选，用于字段映射与操作符指定。
 ### 字段类型支持
 - 基础字段：直接映射常规数据库字段，如 `name`。
 - JSON 字段(->)：如 `profile->name`，需指定前端字段名，如 `profile_name:profile->name`。
@@ -67,7 +69,7 @@ php artisan make:filter UserFilter
 - 关联字段($)：如 `position$name`，用于关联查询。
 
 ### 支持的操作符
-默认支持以下操作符：`eq`, `ne`, `gt`, `lt`, `gte`, `lte`, `like`, `in`, `not_in`, `between`, `is_null`, `not_null`, `json_contains`
+默认支持的操作符包括：`eq`, `ne`, `gt`, `lt`, `gte`, `lte`, `like`, `in`, `not_in`, `between`, `is_null`, `not_null`, `json_contains`
 
 你也可以扩展自定义操作符，在 `AppServiceProvider` 的 `boot` 方法中注册一个自定义操作符，操作符名称需满足仅包含 **小写字母、下划线（_）或中划线（-）** 的格式规范
 ```php
@@ -83,13 +85,13 @@ class NewOperator implements OperatorInterface
    public function apply(Builder $builder, string $whereType, string $field, $value): void
    {
        // $whereType 为 where 或者 orWhere
-       // 自定义查询逻辑
+       // 自定义查询逻辑（whereIn）
        $builder->{"{$whereType}In"}($field, $value);
    }
 }
 ```
 ### 值处理器：ValueResolver
-将频繁出现的值处理逻辑提取为 `ValueResolver` 类，提升可复用性。
+将频繁出现的值处理逻辑提取为 `ValueResolver` 类，提升可复用性。例如你经常需要对某字段进行模糊匹配，可以将逻辑封装为：
 ```php
 class Like implements Mitoop\LaravelQueryBuilder\Contracts\ValueResolver
 {
