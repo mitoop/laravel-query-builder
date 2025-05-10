@@ -22,9 +22,9 @@ composer require mitoop/laravel-query-builder
 ## 使用
 在模型上（无论是静态调用还是实例调用）使用 `filter` 方法，并传入对应的 `Filter` 类即可。只需在 `Filter` 类中定义好相关的搜索规则，便能快速构建查询逻辑。
 
-所有与搜索/排序相关的逻辑都集中定义在 `Filter` 类中，实现了与控制器的彻底解耦，结构清晰、职责单一，便于维护和扩展。
+所有与搜索相关的逻辑都集中定义在 `Filter` 类中，实现了与控制器的彻底解耦，结构清晰、职责单一，便于维护和扩展。
 
-调用 `filter` 后，返回的依然是标准的 Laravel 查询构建器（Query Builder），因此你可以继续链式调用如 with、paginate、get 等方法，保留原有的使用习惯与灵活性。
+调用 `filter` 后，返回的依然是标准的 Laravel 查询构建器（Eloquent Builder），因此你可以继续链式调用如 with、paginate、get 等方法，保留原有的使用习惯与灵活性。
 
 此外，我们还提供了便捷的 Artisan 命令 `php artisan make:filter`，可快速生成符合规范的 `Filter` 类，提升开发效率。
 
@@ -68,6 +68,35 @@ class UserFilter extends AbstractFilter
 表示前端传入的参数是 name_alias，但实际查询的字段为 name，系统会自动解析并应用到查询中。这种写法非常适合字段命名不一致的场景，简洁直观。
 
 类似地，对于 email 字段，也可以使用 `'email_alias:email|like'` 的写法，表示从请求中获取 email_alias 的值，应用到数据库字段 email 上，并使用 LIKE 操作。
+
+###### 封装常用规则：使用 `ValueResolver` 实现复用
+在实际业务中，一些字段的查询规则会频繁出现，例如：
+```php
+$this->value('email', fn($email) => "%{$email}%")
+```
+为了避免重复书写、提升可读性与复用性，你可以将其封装为一个独立的 `ValueResolver` 类：
+```php
+class Like implements Mitoop\LaravelQueryBuilder\Contracts\ValueResolver
+{
+    public function __construct(protected string $prefix = '%', protected string $suffix = '%') {}
+
+    public function resolve($value): string
+    {
+        return $this->prefix.$value.$this->suffix;
+    }
+}
+```
+然后在 `Filter` 中使用：
+```php
+      protected function rules(): array
+      {
+          return [
+              'email|like' => new Like,
+          ];
+      }
+```
+同样的，如果传入的参数值为空，将会自动舍弃该规则。
+
 
 
 
