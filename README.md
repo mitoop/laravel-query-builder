@@ -66,13 +66,13 @@ protected function rules(): array
 
 所有搜索逻辑都集中在 `rules()` 方法中。我们为其设计了一套简洁直观的 DSL（领域特定语言），可用索引数组、关联数组混合定义，系统会自动识别并解析。
 ```php
-      protected function rules(): array
-      {
-          return [
-              'name'
-              'email|like' => $this->value('email', fn($email)=> "%{$email}%"),
-          ];
-      }
+protected function rules(): array
+{
+    return [
+        'name'
+        'email|like' => $this->value('email', fn($email)=> "%{$email}%"),
+    ];
+}
 ```
 ### 规则解析示例
 - `name`：未显式指定操作符，默认使用 `eq`（等于），查询 `name = ?`
@@ -130,12 +130,12 @@ class Like implements Mitoop\LaravelQueryBuilder\Contracts\ValueResolver
 ```
 使用方式：
 ```php
-      protected function rules(): array
-      {
-          return [
-              'email|like' => new Like, // 替代 $this->value('email', fn($email) => "%{$email}%")
-          ];
-      }
+protected function rules(): array
+{
+    return [
+        'email|like' => new Like, // 替代 $this->value('email', fn($email) => "%{$email}%")
+    ];
+}
 ```
 传入 `ValueResolver` 为 null 的值会被忽略，系统会自动跳过这条规则。例如，如果 `email` 的值为 `null`，会自动忽略这条规则。
 
