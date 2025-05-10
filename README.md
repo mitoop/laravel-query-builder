@@ -113,6 +113,8 @@ class NewOperator implements OperatorInterface
    }
 }
 ```
+你也可以参考内置的 `LikeAnyOperator` 实现方式，结合规则中的参数结构，实现灵活的字段控制与值包装能力，满足复杂查询需求。
+
 ### 值处理器：ValueResolver
 在构建搜索规则时，经常会遇到同一类型的值需要重复进行相同的转换处理。为了避免重复编写匿名函数、提升规则的复用性和维护性，我们引入了 `ValueResolver` 接口。
 
