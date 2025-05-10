@@ -24,7 +24,7 @@ class DefaultOperator implements OperatorInterface
         $builder->{$whereType}($field, $this->operator, $value);
     }
 
-    protected function invalidOperator($operator, Builder $builder)
+    protected function invalidOperator($operator, Builder $builder): bool
     {
         $query = $builder->getQuery();
 
