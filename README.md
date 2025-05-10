@@ -1,12 +1,14 @@
 # Laravel Query Builder
 
-Laravel Query Builder 是一个基于接口设计、具备高度可替换性与扩展性的渐进式搜索构建包
+**Laravel Query Builder** 是一个基于接口设计、具备高可替换性与高扩展性的渐进式搜索构建包，旨在让 Laravel 中的复杂搜索更简单、更清晰、更高效。
 
 在大多数系统中，中后台都是不可或缺的组成部分，而列表搜索功能则是最常见、最重复的开发场景之一。为此，我们构建了这个包：以接口为核心，提供清晰、可维护且强大的搜索逻辑构建能力，助你一步一步接近业务的真实需求。
 
 通过将搜索逻辑从控制器中解耦，本包有效避免冗长的条件判断，使代码结构更清晰、职责更单一，也更易于维护与测试。无论是简单筛选还是复杂组合查询，都可以通过定义灵活的规则轻松实现，真正做到"一次封装，多处复用"。
 
 本包的设计深受 [zhuzhichao/laravel-advanced-search](https://github.com/matrix-lab/laravel-advanced-search) 启发，同时借鉴了 [spatie/laravel-query-builder](https://github.com/spatie/laravel-query-builder) 的优秀实践。并在此基础上结合实际业务需求进行了增强与重构。
+
+无论你是正在构建中后台系统，还是希望将搜索逻辑从控制器中彻底解耦，这个包都能帮助你快速构建结构清晰、逻辑优雅的搜索系统。s
 
 ## 环境需求
 
@@ -42,6 +44,25 @@ php artisan make:filter UserFilter
 ```
 
 ### 规则定义：rules 方法
+```php
+// 👎 传统写法（控制器中硬编码）
+if ($request->filled('name')) {
+    $query->where('name', $request->input('name'));
+}
+if ($request->filled('email')) {
+    $query->where('email', 'like', '%'.$request->input('email').'%');
+}
+// 👍 DSL 写法（集中在 Filter 中）
+protected function rules(): array
+{
+    return [
+        'name',
+        'email|like' => new Like,
+    ];
+}
+```
+👆 使用 DSL 后，搜索逻辑更加集中、简洁且易于维护。
+
 所有搜索逻辑都集中在 `rules()` 方法中。我们为其设计了一套简洁直观的 DSL（领域特定语言），可用索引数组、关联数组混合定义，系统会自动识别并解析。
 ```php
       protected function rules(): array
@@ -71,7 +92,8 @@ php artisan make:filter UserFilter
 ### 支持的操作符
 默认支持的操作符包括：`eq`, `ne`, `gt`, `lt`, `gte`, `lte`, `like`, `in`, `not_in`, `between`, `is_null`, `not_null`, `json_contains`
 
-你也可以扩展自定义操作符，在 `AppServiceProvider` 的 `boot` 方法中注册一个自定义操作符，操作符名称需满足仅包含 **小写字母、下划线（_）或中划线（-）** 的格式规范
+你也可以扩展自定义操作符，在 `AppServiceProvider` 的 `boot` 方法中注册一个自定义操作符，
+操作符名称需满足仅包含 **小写字母、下划线（_）或中划线（-）** 的格式规范，这是为了确保规则 DSL 的解析稳定与一致性。
 ```php
 public function boot()
 {
@@ -91,7 +113,9 @@ class NewOperator implements OperatorInterface
 }
 ```
 ### 值处理器：ValueResolver
-将频繁出现的值处理逻辑提取为 `ValueResolver` 类，提升可复用性。例如你经常需要对某字段进行模糊匹配，可以将逻辑封装为：
+它让你可以在多个规则中复用相同的值转换逻辑，避免重复写匿名函数，提升一致性与维护性。
+
+例如你经常需要对某字段进行模糊匹配，可以将逻辑封装为：
 ```php
 class Like implements Mitoop\LaravelQueryBuilder\Contracts\ValueResolver
 {
