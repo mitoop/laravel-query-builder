@@ -209,6 +209,13 @@ class UserFilter extends AbstractFilter
 }
 ```
 
+## 高级特性
+查询解析与排序解析的核心逻辑，分别由 RuleResolverInterface 和 SortResolverInterface 接口负责。
+
+你可以通过自定义这两个接口的实现，完全覆盖默认的解析行为，以适配更复杂或特殊的业务需求。
+
+当前系统默认仅支持搜索与排序，但你也可以通过 addResolver 方法注册自定义解析器，扩展更多类型的查询逻辑，实现更灵活的数据处理能力。
+
 
 
 
