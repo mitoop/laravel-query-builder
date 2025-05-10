@@ -40,7 +40,7 @@ class UserFilter extends AbstractFilter
 }
 ```
 
-#### 定义搜索规则：rules 方法
+### 定义搜索规则：rules 方法
 所有搜索逻辑都通过 rules 方法集中定义。为了更清晰、统一地描述这些规则，我们为 rules 提供了一套简洁的领域特定语言（DSL）。语法直观，使用门槛低，便于快速上手。
 
 在 rules 方法中，你可以同时使用 索引数组（Indexed Array） 和 关联数组（Associative Array） 的形式，两者可以混合存在，系统会自动进行统一解析。
@@ -54,7 +54,7 @@ class UserFilter extends AbstractFilter
           ];
       }
 ```
-##### 规则解析
+### 规则解析
 - 对于 name 字段，如果未显式指定操作符（操作符统一通过 | 分隔），系统默认使用 eq（等于）操作。也就是说，'name' 会被解析为 name = ? 的查询条件，字段对应的值则自动从前端传入的 name 请求参数中获取。
 如果该参数在请求中未传入，系统会自动忽略这条规则，不会将其纳入查询条件中。
 
@@ -69,7 +69,7 @@ class UserFilter extends AbstractFilter
 
 类似地，对于 email 字段，也可以使用 `'email_alias:email|like'` 的写法，表示从请求中获取 email_alias 的值，应用到数据库字段 email 上，并使用 LIKE 操作。
 
-###### 封装常用规则：使用 `ValueResolver` 实现复用
+### 使用 `ValueResolver` 实现复用
 在实际业务中，一些字段的查询规则会频繁出现，例如：
 ```php
 $this->value('email', fn($email) => "%{$email}%")
@@ -95,8 +95,7 @@ class Like implements Mitoop\LaravelQueryBuilder\Contracts\ValueResolver
           ];
       }
 ```
-同样的，如果传入的参数值为空，将会自动舍弃该规则。
-
+同样的，如果email的值为空，将会自动舍弃该规则。
 
 
 
