@@ -69,7 +69,7 @@ class UserFilter extends AbstractFilter
 
 类似地，对于 email 字段，也可以使用 `'email_alias:email|like'` 的写法，表示从请求中获取 email_alias 的值，应用到数据库字段 email 上，并使用 LIKE 操作。
 
-如你所见，规则定义非常直观，采用 <前端字段>:<数据库字段>|<操作符> 的格式。
+如你所见，规则定义非常直观，采用 **<前端字段>:<数据库字段>|<操作符>** 的格式。
 
 ### 数据库字段
 - 基础字段：直接映射常规数据库字段，如 name。
