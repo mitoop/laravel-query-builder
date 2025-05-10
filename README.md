@@ -189,6 +189,67 @@ class UserFilter extends AbstractFilter
 
 该能力适用于具有 Laravel 包开发经验与接口编程能力的高级用户，使用前建议充分理解包的工作机制。
 
+## 完整示例：UserFilter
+以下是一个完整的 `UserFilter` 示例，展示了常见的搜索与排序组合写法：
+```php
+use Mitoop\LaravelQueryBuilder\Filters\AbstractFilter;
+use Mitoop\LaravelQueryBuilder\Operators\Like;
+
+class UserFilter extends AbstractFilter
+{
+    protected array $allowedSorts = ['id', 'created_at'];
+
+    protected function rules(): array
+    {
+        return [
+             // 精确匹配 ID
+            'id',
+
+            // 模糊搜索 name 和 email
+            'name|like'  => new Like,
+            'email|like' => new Like,
+
+            // 枚举筛选（如启用状态：enabled, disabled）
+            'status|in',
+
+            // 时间范围过滤（created_at 字段）
+            'created_from:created_at|gte',
+            'created_to:created_at|lte',
+            'created_at' => [
+                'gte' => $this->value('created_at', fn($date) => Carbon::parse($date)),
+                'lte' => $this->value('created_at', fn($date) => Carbon::parse($date)),
+                'mix' => 'or' // 逻辑关系
+            ],
+            
+            // JSON 字段（nickname）
+            'nickname:profile->nickname|like' => new Like,
+            
+             // JSON 数组字段：包含某个 tag
+            'tag:profile->tags|json_contains',
+
+            // 关联字段搜索（如职位名称 position.name）
+            'position$name|like' => new Like,
+            
+            // 关联查询别名字段
+            'u.name',
+
+            // 使用模型 Scope（如 Scope active()）
+            new Scope('active'),
+
+            // 使用闭包自定义条件（关键词匹配 name 或 email）
+            $this->whenValue('keyword', function (Builder $builder, $keyword) {
+                $builder->whereAny(['name', 'email'], 'like', "%{$keyword}%");
+            }),
+
+            // 也支持 DB::raw、function、直接语句扩展
+             DB::raw('users.score > 100'),
+             function (Builder $builder) {
+                 $builder->where('is_verified', true);
+             },
+        ];
+    }
+}
+```
 ## 贡献
 
 有什么新的想法和建议，欢迎提交 [issue](https://github.com/mitoop/laravel-query-builder/issues) 或者 [Pull Requests](https://github.com/mitoop/laravel-query-builder/pulls)。
