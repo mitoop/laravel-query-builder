@@ -6,7 +6,10 @@ use Illuminate\Database\Eloquent\Builder;
 
 class DefaultOperator implements OperatorInterface
 {
-    public function __construct(protected string $operator) {}
+    public function __construct(protected string $operator)
+    {
+        $this->operator = $this->convertOperator($this->operator);
+    }
 
     public function apply(Builder $builder, string $whereType, string $field, $value): void
     {
@@ -18,15 +21,17 @@ class DefaultOperator implements OperatorInterface
             $value = reset($value);
         }
 
-        $builder->{$whereType}($field, $this->convertOperator($this->operator), $value);
+        $builder->{$whereType}($field, $this->operator, $value);
     }
 
-    protected function invalidOperator($operator, $builder)
+    protected function invalidOperator($operator, Builder $builder)
     {
+        $query = $builder->getQuery();
+
         return (function () use ($operator) {
-            /** @var Builder $this */
+            /** @var \Illuminate\Contracts\Database\Query\Builder $this */
             return $this->invalidOperator($operator);
-        })->call($builder);
+        })->call($query);
 
     }
 
@@ -41,7 +46,7 @@ class DefaultOperator implements OperatorInterface
             'lt' => '<',
             'lte' => '<=',
             'le' => '<=',
-            'like' => 'LIKE',
+            'like' => 'like',
         ][$operator] ?? $operator;
     }
 }
