@@ -43,7 +43,7 @@ class UserFilter extends AbstractFilter
 ### 定义搜索规则：rules 方法
 所有搜索逻辑都通过 rules 方法集中定义。为了更清晰、统一地描述这些规则，我们为 rules 提供了一套简洁的领域特定语言（DSL）。语法直观，使用门槛低，便于快速上手。
 
-在 rules 方法中，你可以同时使用 索引数组（Indexed Array） 和 关联数组（Associative Array） 的形式，两者可以混合存在，系统会自动进行统一解析。
+在 rules 方法中，你可以同时使用索引数组和关联数组的形式，两者可以混合存在，系统会自动进行统一解析。
 
 ```php
       protected function rules(): array
@@ -56,18 +56,66 @@ class UserFilter extends AbstractFilter
 ```
 ### 规则解析
 - 对于 name 字段，如果未显式指定操作符（操作符统一通过 | 分隔），系统默认使用 eq（等于）操作。也就是说，'name' 会被解析为 name = ? 的查询条件，字段对应的值则自动从前端传入的 name 请求参数中获取。
-如果该参数在请求中未传入，系统会自动忽略这条规则，不会将其纳入查询条件中。
+如果该参数在请求中未传入或者为空（空表示：null, '', []），系统会自动忽略这条规则，不会将其纳入查询条件中。
 
 - 在 email 字段中，我们显式指定了操作符 like，因此系统会将其解析为 email LIKE ? 的查询条件。字段的值通过 `$this->value('email', fn($email) => "%{$email}%")` 获取：
   1. 第一个参数为请求中字段的名称（如 email）；
   2. 第二个参数是可选的闭包函数，用于对原始值进行处理，比如添加通配符 % 实现模糊查询。
 
-值得注意的是：如果传入的参数值为空，value 方法会自动舍弃该规则，避免拼接无意义的查询条件。
+值得注意的是：如果传入的参数值为空，value 方法会自动忽略这条规则，避免拼接无意义的查询条件。
 
 另外，当请求参数的名称与数据库字段名称不一致时，你可以使用 请求参数名:字段名 的格式来进行映射。例如：`'name_alias:name'`
 表示前端传入的参数是 name_alias，但实际查询的字段为 name，系统会自动解析并应用到查询中。这种写法非常适合字段命名不一致的场景，简洁直观。
 
 类似地，对于 email 字段，也可以使用 `'email_alias:email|like'` 的写法，表示从请求中获取 email_alias 的值，应用到数据库字段 email 上，并使用 LIKE 操作。
+
+如你所见，规则定义非常直观，采用 <前端字段>:<数据库字段>|<操作符> 的格式。
+
+### 数据库字段
+- 基础字段：直接映射常规数据库字段，如 name。
+- JSON 字段(->)：支持查询 JSON 类型字段，如 profile->name。当前使用JSON 字段时，需指定前端字段名，如 `profile_name:profile->name`。
+- 别名字段(.)：支持联表查询时使用表别名字段，如 u.name。
+- 关联字段($)：支持通过关系查询字段，如 position$name，处理关联数据。
+
+### 支持的操作符
+默认支持以下操作符：
+- eq：等于
+- ne：不等于
+- gt：大于
+- lt：小于
+- gte：大于等于
+- lte：小于等于
+- like：模糊查询
+- in：包含
+- not_in：不包含
+- between：范围查询
+- is_null：判断字段值是否为 NULL。仅当传入值等效为 true 时，才会应用该条件，筛选字段值为 NULL 的数据；否则忽略此规则。
+- not_null：判断字段值是否不为 NULL。仅当传入值等效为 true 时，才会应用该条件，筛选字段值不为 NULL 的数据；否则忽略此规则。
+- json_contains：检查 JSON 字段是否包含指定值
+
+此外，你还可以自定义扩展操作符，但操作符名称需满足仅包含 **小写字母、下划线（_）或中划线（-）** 的格式规范。
+
+例如，你可以在 ServiceProvider 的 boot 方法中注册一个自定义操作符：
+```php
+public function boot()
+{
+    app(OperatorManager::class)->extend('new_operator', function ($app) {
+        return new NewOperator();
+    });
+}
+```
+NewOperator 类需要实现 OperatorInterface 接口，并定义具体的查询逻辑，例如：
+```php
+class NewOperator implements OperatorInterface
+{
+   public function apply(Builder $builder, string $whereType, string $field, $value): void
+   {
+       // $whereType 为 where 或者 orWhere
+       // 自定义查询逻辑
+       $builder->{"{$whereType}In"}($field, $value);
+   }
+}
+```
 
 ### 使用 `ValueResolver` 实现复用
 在实际业务中，一些字段的查询规则会频繁出现，例如：
@@ -95,7 +143,7 @@ class Like implements Mitoop\LaravelQueryBuilder\Contracts\ValueResolver
           ];
       }
 ```
-同样的，如果email的值为空，将会自动舍弃该规则。
+同样的，如果 email 的值为空，系统会自动忽略这条规则。 Like 类只是一个简单的示例，你可以根据实际需求实现更复杂的逻辑。
 
 
 
