@@ -1,6 +1,6 @@
 <?php
 
-namespace Mitoop\LaravelQueryBuilder\Support\Operator;
+namespace Mitoop\LaravelQueryBuilder\Support\Operators;
 
 use Illuminate\Support\Manager;
 use Illuminate\Support\Str;

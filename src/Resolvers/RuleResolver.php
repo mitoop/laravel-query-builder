@@ -10,7 +10,7 @@ use Illuminate\Support\Str;
 use InvalidArgumentException;
 use Mitoop\LaravelQueryBuilder\Contracts\RuleResolverInterface;
 use Mitoop\LaravelQueryBuilder\Scope;
-use Mitoop\LaravelQueryBuilder\Support\Operator\OperatorManager;
+use Mitoop\LaravelQueryBuilder\Support\Operators\OperatorManager;
 use Mitoop\LaravelQueryBuilder\Support\ValueHelper;
 use ReflectionMethod;
 

@@ -7,9 +7,10 @@ use InvalidArgumentException;
 use Mitoop\LaravelQueryBuilder\Commands\MakeFilterCommand;
 use Mitoop\LaravelQueryBuilder\Contracts\RuleResolverInterface;
 use Mitoop\LaravelQueryBuilder\Contracts\SortResolverInterface;
+use Mitoop\LaravelQueryBuilder\Operators\LikeAnyOperator;
 use Mitoop\LaravelQueryBuilder\Resolvers\RuleResolver;
 use Mitoop\LaravelQueryBuilder\Resolvers\SortResolver;
-use Mitoop\LaravelQueryBuilder\Support\Operator\OperatorManager;
+use Mitoop\LaravelQueryBuilder\Support\Operators\OperatorManager;
 
 class ServiceProvider extends \Illuminate\Support\ServiceProvider
 {
@@ -57,5 +58,7 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
 
             return $filter();
         });
+
+        $this->app->get(OperatorManager::class)->extend('like_any', fn () => new LikeAnyOperator);
     }
 }
