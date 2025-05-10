@@ -124,13 +124,10 @@ protected function rules(): array
 {
     return [
         DB::raw('name = 1'),
-      
         function (Builder $builder) {
             $builder->where('name', 'like', '%mitoop%');
         },
-        
         new Scope('scopeName', 'arg1', 'arg2'),
-       
         $this->whenValue('keyword', function(Builder $builder, $keyword) {
             // 如果 keyword 值为 null，同样会自动忽略这条规则
             $builder->whereAny(['name', 'email'], 'like', "%{$keyword}%");
