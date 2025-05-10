@@ -231,7 +231,7 @@ class UserFilter extends AbstractFilter
             // 关联字段搜索（如职位名称 position.name）
             'position$name|like' => new Like,
             
-            // 关联查询别名字段
+            // 表别名字段（如在 join 中为 users 表取别名 u）
             'u.name',
 
             // 使用模型 Scope（如 Scope active()）
