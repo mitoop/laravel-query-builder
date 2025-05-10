@@ -51,8 +51,8 @@ class ValueHelper
             return null;
         }
 
-        if (is_null($operator) && is_array($item)) {
-            $operator = $item;
+        if (is_null($operator)) {
+            $operator = is_array($item) ? $item : ['eq' => $value];
         } else {
             $operator = [$operator => $value];
         }
