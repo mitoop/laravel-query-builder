@@ -8,7 +8,7 @@
 
 本包的设计深受 [zhuzhichao/laravel-advanced-search](https://github.com/matrix-lab/laravel-advanced-search) 启发，同时借鉴了 [spatie/laravel-query-builder](https://github.com/spatie/laravel-query-builder) 的优秀实践。并在此基础上结合实际业务需求进行了增强与重构。
 
-无论你是正在构建中后台系统，还是希望将搜索逻辑从控制器中彻底解耦，这个包都能帮助你快速构建结构清晰、逻辑优雅的搜索系统。s
+无论你是正在构建中后台系统，还是希望将搜索逻辑从控制器中彻底解耦，这个包都能帮助你快速构建结构清晰、逻辑优雅的搜索系统。
 
 ## 环境需求
 
@@ -52,6 +52,7 @@ if ($request->filled('name')) {
 if ($request->filled('email')) {
     $query->where('email', 'like', '%'.$request->input('email').'%');
 }
+
 // 👍 DSL 写法（集中在 Filter 中）
 protected function rules(): array
 {
@@ -249,6 +250,10 @@ class UserFilter extends AbstractFilter
         ];
     }
 }
+```
+在控制器中使用：
+```php
+$users = User::filter(UserFilter::class)->paginate();
 ```
 ## 贡献
 
