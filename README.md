@@ -20,7 +20,7 @@ composer require mitoop/laravel-query-builder
 ```
 
 ## 快速使用
-在模型上使用 filter 方法，传入对应的 Filter 类，即可构建查询逻辑。相关的搜索规则集中定义在 Filter 中，实现了与控制器的彻底解耦。
+在模型上使用 `filter` 方法，传入对应的 `Filter` 类，即可构建查询逻辑。相关的搜索规则集中定义在 `Filter` 中，实现了与控制器的彻底解耦。
 ```php
 class UserFilter extends AbstractFilter
 {
@@ -32,15 +32,15 @@ class UserFilter extends AbstractFilter
     }
 }
 ```
-调用 filter 后返回的是原生 Eloquent 查询构建器，仍支持链式调用 with、paginate、get 等方法，保持熟悉的开发体验。
+调用 `filter` 后返回的是原生 Eloquent 查询构建器，仍支持链式调用 `with`、`paginate`、`get` 等方法，保持熟悉的开发体验。
 
-你也可以使用 Artisan 命令快速生成标准的 Filter 类：
+你也可以使用 Artisan 命令快速生成标准的 `Filter` 类：
 ```php
 php artisan make:filter UserFilter
 ```
 
 ### 规则定义：rules 方法
-所有搜索逻辑都集中在 rules() 方法中。我们为其设计了一套简洁直观的 DSL（领域特定语言），可用索引数组、关联数组混合定义，系统会自动识别并解析。
+所有搜索逻辑都集中在 `rules()` 方法中。我们为其设计了一套简洁直观的 DSL（领域特定语言），可用索引数组、关联数组混合定义，系统会自动识别并解析。
 ```php
       protected function rules(): array
       {
@@ -51,15 +51,15 @@ php artisan make:filter UserFilter
       }
 ```
 ### 规则解析示例
-- name：未显式指定操作符，默认使用 eq（等于），查询 name = ?
-- email|like：使用 like 操作符，构建 email LIKE ? 条件，值通过闭包处理为模糊查询。
+- `name`：未显式指定操作符，默认使用 `eq`（等于），查询 `name = ?`
+- `email|like`：使用 `like` 操作符，构建 `email LIKE ?` 条件，值通过闭包处理为模糊查询。
 
 字段命名支持灵活映射：
 ```text
 'name_alias:name' // 请求参数为 name_alias，实际查询 name 字段
 'email_alias:email|like' // 请求参数 email_alias，查询 email 字段，使用 like 操作
 ```
-
+完整的字段规则是 **<前端字段>:<数据库字段>|<操作符>** 的格式
 ### 字段类型支持
 - 基础字段：直接映射常规数据库字段，如 `name`。
 - JSON 字段(->)：如 `profile->name`，需指定前端字段名，如 `profile_name:profile->name`。
@@ -69,14 +69,14 @@ php artisan make:filter UserFilter
 ### 支持的操作符
 默认支持以下操作符：`eq`, `ne`, `gt`, `lt`, `gte`, `lte`, `like`, `in`, `not_in`, `between`, `is_null`, `not_null`, `json_contains`
 
-你也可以扩展自定义操作符，ServiceProvider 的 boot 方法中注册一个自定义操作符，操作符名称需满足仅包含 **小写字母、下划线（_）或中划线（-）** 的格式规范
+你也可以扩展自定义操作符，在 `AppServiceProvider` 的 `boot` 方法中注册一个自定义操作符，操作符名称需满足仅包含 **小写字母、下划线（_）或中划线（-）** 的格式规范
 ```php
 public function boot()
 {
     app(OperatorManager::class)->extend('new_operator', fn($app) => new NewOperator);
 }
 ```
-NewOperator 类需要实现 OperatorInterface 接口，并定义具体的查询逻辑，例如：
+`NewOperator` 类需要实现 `OperatorInterface` 接口，并定义具体的查询逻辑，例如：
 ```php
 class NewOperator implements OperatorInterface
 {
@@ -110,7 +110,7 @@ class Like implements Mitoop\LaravelQueryBuilder\Contracts\ValueResolver
           ];
       }
 ```
-传入 `ValueResolver` 为 null的值会被忽略，系统会自动跳过这条规则。例如，如果 email 的值为 null，会自动忽略这条规则。
+传入 `ValueResolver` 为 null 的值会被忽略，系统会自动跳过这条规则。例如，如果 `email` 的值为 `null`，会自动忽略这条规则。
 
 ### 进阶规则支持
 - 原生 SQL：`DB::raw(...)`
@@ -141,7 +141,7 @@ protected function rules(): array
 排序字段默认从请求中的 `sorts` 字段提取，格式如：`sorts=-id,name`（降序 id，升序 name）。
 - `allowedSorts`：限制允许排序的字段。
 - 自定义字段名：通过 `SortResolver::sortFieldUsing()` 设定。
-- 覆盖排序逻辑：通过重写 sorts() 方法完全控制排序：
+- 覆盖排序逻辑：通过重写 `sorts()` 方法完全控制排序：
 ```php
 class UserFilter extends AbstractFilter
 {
