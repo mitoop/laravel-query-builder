@@ -60,6 +60,6 @@ class OperatorManager extends Manager
 
     public function getDefaultDriver(): string
     {
-        throw new InvalidArgumentException('This manager does not support a default driver. Please call `use()` with the desired driver name.');
+        throw new InvalidArgumentException('Please call `use()` with the desired operator name.');
     }
 }
