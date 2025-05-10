@@ -27,7 +27,7 @@ class ValueHelper
 
         $sourceField = $matches[1] ?? null;
         $internalField = $matches[2] ?? null;
-        $operator = $matches[3] ?? 'eq';
+        $operator = $matches[3] ?? null;
 
         if (empty($sourceField)) {
             if (! preg_match('/(?:[\w\-]+[.$])?([\w>\-]+)$/', $internalField, $subMatch)) {
@@ -51,14 +51,11 @@ class ValueHelper
             return null;
         }
 
-        if (in_array($operator, ['is', 'is_not'], true)) {
-            if (! $value) {
-                return null;
-            }
-            $value = true;
+        if (is_null($operator) && is_array($item)) {
+            $operator = $item;
+        } else {
+            $operator = [$operator => $value];
         }
-
-        $operator = (! in_array($operator, ['in', 'not_in', 'between', 'json_contains'], true) && is_array($item)) ? $item : [$operator => $value];
 
         return [
             'field' => $internalField,
