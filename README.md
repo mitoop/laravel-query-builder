@@ -108,17 +108,19 @@ class NewOperator implements OperatorInterface
    public function apply(Builder $builder, string $whereType, string $field, $value): void
    {
        // $whereType 为 where 或者 orWhere
-       // 自定义查询逻辑（whereIn）
-       $builder->{"{$whereType}In"}($field, $value);
+       // 可自定义任意查询逻辑，这里仅示例 whereIn
+        $builder->{"{$whereType}In"}($field, $value);
    }
 }
 ```
 ### 值处理器：ValueResolver
-它让你可以在多个规则中复用相同的值转换逻辑，避免重复写匿名函数，提升一致性与维护性。
+在构建搜索规则时，经常会遇到同一类型的值需要重复进行相同的转换处理。为了避免重复编写匿名函数、提升规则的复用性和维护性，我们引入了 `ValueResolver` 接口。
 
-例如你经常需要对某字段进行模糊匹配，可以将逻辑封装为：
+你只需实现一个 `resolve` 方法，就可以将任何复杂的值转换逻辑封装成独立的类，灵活地应用在多个规则中，也方便项目中统一规范和扩展行为。
+
+例如，模糊搜索逻辑可以封装为：
 ```php
-class Like implements Mitoop\LaravelQueryBuilder\Contracts\ValueResolver
+class Like implements ValueResolver
 {
     public function __construct(protected string $prefix = '%', protected string $suffix = '%') {}
 
@@ -128,16 +130,39 @@ class Like implements Mitoop\LaravelQueryBuilder\Contracts\ValueResolver
     }
 }
 ```
+又如，需要将传入的日期区间转换为完整的一天范围时：
+```php
+class DateRange implements ValueResolver
+{
+    public function resolve($value): ?array
+    {
+        if (! is_array($value) || count($value) !== 2) {
+            return null;
+        }
+
+        try {
+            [$start, $end] = $value;
+            $start = Carbon::parse($start)->startOfDay();
+            $end = Carbon::parse($end)->endOfDay();
+        } catch (Throwable) {
+            return null;
+        }
+
+        return [$start, $end];
+    }
+}
+```
 使用方式：
 ```php
 protected function rules(): array
 {
     return [
         'email|like' => new Like, // 替代 $this->value('email', fn($email) => "%{$email}%")
+        'created_at|between' => new DateRange,
     ];
 }
 ```
-传入 `ValueResolver` 为 null 的值会被忽略，系统会自动跳过这条规则。例如，如果 `email` 的值为 `null`，会自动忽略这条规则。
+如果前端传入的某个字段值为 null 或者 []，该规则会被自动跳过，`ValueResolve` 不会被调用，确保只处理有效输入，避免无效查询。
 
 ### 进阶规则支持
 - 原生 SQL：`DB::raw(...)`
@@ -154,7 +179,7 @@ protected function rules(): array
         },
         new Scope('scopeName', 'arg1', 'arg2'),
         $this->whenValue('keyword', function(Builder $builder, $keyword) {
-            // 如果 keyword 值为 null，同样会自动忽略这条规则
+            // 如果 keyword 为 null 或空字符串，将自动跳过，不执行此查询
             $builder->whereAny(['name', 'email'], 'like', "%{$keyword}%");
         }),
     ];
@@ -185,8 +210,6 @@ class UserFilter extends AbstractFilter
 你可以绑定自定义实现，覆盖默认行为，适配更复杂的查询需求。
 
 此外，包内默认仅支持搜索与排序，但你也可以通过 `addResolver` 方法注册自定义解析器，扩展更多类型的查询逻辑。
-
-⚠️ 建议：
 
 该能力适用于具有 Laravel 包开发经验与接口编程能力的高级用户，使用前建议充分理解包的工作机制。
 
@@ -222,6 +245,9 @@ class UserFilter extends AbstractFilter
                 'mix' => 'or' // 逻辑关系
             ],
             
+            // 日期范围过滤（created_at 字段）
+            'created_at|between' => new DateRange,
+            
             // JSON 字段（nickname）
             'nickname:profile->nickname|like' => new Like,
             
@@ -234,7 +260,7 @@ class UserFilter extends AbstractFilter
             // 表别名字段（如在 join 中为 users 表取别名 u）
             'u.name',
 
-            // 使用模型 Scope（如 Scope active()）
+            // 使用模型 Scope（如 scopeActive()）
             new Scope('active'),
 
             // 使用闭包自定义条件（关键词匹配 name 或 email）
@@ -242,11 +268,12 @@ class UserFilter extends AbstractFilter
                 $builder->whereAny(['name', 'email'], 'like', "%{$keyword}%");
             }),
 
-            // 也支持 DB::raw、function、直接语句扩展
-             DB::raw('users.score > 100'),
-             function (Builder $builder) {
+            // DB::raw(...)
+            DB::raw('users.score > 100'),
+            // 闭包 
+            function (Builder $builder) {
                  $builder->where('is_verified', true);
-             },
+            },
         ];
     }
 }
