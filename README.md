@@ -145,6 +145,37 @@ class Like implements Mitoop\LaravelQueryBuilder\Contracts\ValueResolver
 ```
 同样的，如果 email 的值为空，系统会自动忽略这条规则。 Like 类只是一个简单的示例，你可以根据实际需求实现更复杂的逻辑。
 
+### 更多
+rules 方法内还支持以下功能：
+- RAW：直接使用原始 SQL 查询。
+- 闭包：支持通过闭包实现自定义查询逻辑。
+- Scope（本地作用域）：支持调用模型的本地作用域进行查询，既支持以 scope 开头的本地作用域，也支持通过 #[Scope] 注解定义的本地作用域。
+- 关键词查询：提供快捷的关键词查询方法，简化常见查询的使用。
+
+```php
+protected function rules(): array
+{
+    return [
+        DB::raw('name = 1'),
+        
+        // 使用闭包进行自定义查询
+        function (Builder $builder) {
+            $builder->where('name', 'like', '%mitoop%');
+        },
+
+        // 调用本地作用域（支持 scope 和 #[Scope] 注解）
+        new Scope('scopeName', 'arg1', 'arg2'),
+
+        // 关键词查询，简化多字段模糊查询
+        // 如果 keyword 值为空，同样会自动忽略这条规则
+        $this->whenValue('keyword', function(Builder $builder, $keyword) {
+            $builder->whereAny(['name', 'email'], 'like', "%{$keyword}%");
+        }),
+    ];
+}
+```
+
+
 
 
 
