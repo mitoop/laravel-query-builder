@@ -228,6 +228,27 @@ class UserFilter extends AbstractFilter
 你可以根据业务需求灵活返回排序字段和方向，该方法会跳过默认排序提取流程，完全由你自定义。
 
 ## 高级特性
+#### 生命周期钩子：booting() 与 boot()
+`booting()` 和 `boot()` 方法允许你在不同阶段扩展搜索构建逻辑。它们都是可选的，仅在需要时覆盖。
+
+###### booting()
+在执行构建逻辑之前调用，适合设置默认参数、预处理输入等。
+```php
+public function booting(): void
+{
+    // 例如设置默认参数
+    $this->data['status'] ??= 'active';
+}
+```
+###### booting()
+在构建逻辑正式开始之前调用，适合动态注册过滤器或根据条件修改行为。
+```php
+public function boot(): void
+{
+    $this->builder->with($this->with());
+}
+```
+#### 自定义类绑定和接口驱动
 本包核心功能均以接口驱动设计，几乎所有实现都支持通过绑定自定义类进行替换，帮助你灵活适配更复杂或更个性化的业务场景。
 该扩展能力主要面向具备 `Laravel` 包开发经验及接口编程能力的高级用户，建议在充分理解本包工作机制的基础上使用。
 
