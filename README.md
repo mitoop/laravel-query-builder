@@ -240,12 +240,14 @@ public function booting(): void
     $this->data['status'] ??= 'active';
 }
 ```
-###### booting()
+###### boot()
 在构建逻辑正式开始之前调用，适合动态注册过滤器或根据条件修改行为。
 ```php
 public function boot(): void
 {
-    $this->builder->with($this->with());
+    if (method_exists($this, 'with')) {
+        $this->builder->with($this->with());
+    }
 }
 ```
 #### 自定义类绑定和接口驱动
