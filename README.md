@@ -97,7 +97,7 @@ protected function rules(): array
 ```php
 public function boot()
 {
-    app(OperatorFactoryInterface::class)->extend('new_operator', fn($app) => new NewOperator);
+    app(OperatorFactoryInterface::class)->register('new_operator', fn($app) => new NewOperator);
 }
 ```
 `NewOperator` 类需要实现 `OperatorInterface` 接口，并定义具体的查询逻辑，例如：

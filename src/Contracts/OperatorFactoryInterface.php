@@ -8,5 +8,5 @@ interface OperatorFactoryInterface
 {
     public function use(string $operator): OperatorInterface;
 
-    public function extend($driver, Closure $callback);
+    public function register(string $name, Closure $callback): static;
 }

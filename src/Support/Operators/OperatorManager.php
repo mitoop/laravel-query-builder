@@ -2,6 +2,7 @@
 
 namespace Mitoop\LaravelQueryBuilder\Support\Operators;
 
+use Closure;
 use Illuminate\Support\Manager;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
@@ -13,6 +14,11 @@ class OperatorManager extends Manager implements OperatorFactoryInterface
     public function use(string $operator): OperatorInterface
     {
         return $this->driver($operator);
+    }
+
+    public function register(string $name, Closure $callback): static
+    {
+        return $this->extend($name, $callback);
     }
 
     protected function createInDriver()

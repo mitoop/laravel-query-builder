@@ -60,6 +60,6 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
             return $filter();
         });
 
-        app(OperatorFactoryInterface::class)->extend('like_any', fn () => new LikeAnyOperator);
+        app(OperatorFactoryInterface::class)->register('like_any', fn () => new LikeAnyOperator);
     }
 }
