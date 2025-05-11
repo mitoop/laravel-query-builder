@@ -289,6 +289,9 @@ class UserFilter extends AbstractFilter
             $this->whenValue('keyword', function (Builder $builder, $keyword) {
                 $builder->whereAny(['name', 'email'], 'like', "%{$keyword}%");
             }),
+            
+            // Like Any 和上面闭包等效
+            'keyword|like_any' => new LikeAny(['name', 'email'])
 
             // DB::raw(...)
             DB::raw('users.score > 100'),
