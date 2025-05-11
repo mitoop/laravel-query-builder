@@ -52,10 +52,13 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
                 throw new InvalidArgumentException('Filter must be instance of AbstractFilter');
             }
 
-            $filter->withBuilder($this)
-                ->setData($data ?: request()->all())
+            $filter->withBuilder($this);
+            $filter->booting();
+
+            $filter->setData($data ?: request()->all())
                 ->addResolver('rules', RuleResolverInterface::class)
                 ->addResolver('sorts', SortResolverInterface::class);
+            $filter->boot();
 
             return $filter();
         });

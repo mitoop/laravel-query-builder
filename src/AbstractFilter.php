@@ -24,6 +24,10 @@ abstract class AbstractFilter implements BuilderAwareInterface
 
     protected array $data;
 
+    public function booting(): void {}
+
+    public function boot(): void {}
+
     public function setData(array $data): static
     {
         $this->data = $data;
@@ -36,6 +40,28 @@ abstract class AbstractFilter implements BuilderAwareInterface
         $this->resolvers[$name] = $parser;
 
         return $this;
+    }
+
+    public function __invoke(): Builder
+    {
+        foreach ($this->resolvers as $tag => $resolver) {
+            if (method_exists($this, $tag)) {
+                tap(app($resolver, ['builder' => $this->builder, 'definition' => $this->{$tag}(), 'input' => $this->data]),
+                    function (ResolverInterface $resolver) {
+                        if ($resolver instanceof FilterAwareInterface) {
+                            $resolver->withFilter($this);
+                        }
+
+                        if ($resolver instanceof OperatorFactoryAwareInterface) {
+                            $resolver->withOperatorFactory(app(OperatorFactoryInterface::class));
+                        }
+
+                        $resolver->resolve();
+                    });
+            }
+        }
+
+        return $this->builder;
     }
 
     abstract protected function rules(): array;
@@ -67,27 +93,5 @@ abstract class AbstractFilter implements BuilderAwareInterface
         }
 
         return null;
-    }
-
-    public function __invoke(): Builder
-    {
-        foreach ($this->resolvers as $tag => $resolver) {
-            if (method_exists($this, $tag)) {
-                tap(app($resolver, ['builder' => $this->builder, 'definition' => $this->{$tag}(), 'input' => $this->data]),
-                    function (ResolverInterface $resolver) {
-                        if ($resolver instanceof FilterAwareInterface) {
-                            $resolver->withFilter($this);
-                        }
-
-                        if ($resolver instanceof OperatorFactoryAwareInterface) {
-                            $resolver->withOperatorFactory(app(OperatorFactoryInterface::class));
-                        }
-
-                        $resolver->resolve();
-                    });
-            }
-        }
-
-        return $this->builder;
     }
 }
