@@ -1,6 +1,6 @@
 <?php
 
-namespace Mitoop\LaravelQueryBuilder\Support\Operators;
+namespace Mitoop\LaravelQueryBuilder\Contracts;
 
 use Illuminate\Database\Eloquent\Builder;
 

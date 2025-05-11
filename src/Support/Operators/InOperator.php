@@ -3,6 +3,7 @@
 namespace Mitoop\LaravelQueryBuilder\Support\Operators;
 
 use Illuminate\Database\Eloquent\Builder;
+use Mitoop\LaravelQueryBuilder\Contracts\OperatorInterface;
 
 class InOperator implements OperatorInterface
 {

@@ -5,8 +5,10 @@ namespace Mitoop\LaravelQueryBuilder\Support\Operators;
 use Illuminate\Support\Manager;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
+use Mitoop\LaravelQueryBuilder\Contracts\OperatorFactoryInterface;
+use Mitoop\LaravelQueryBuilder\Contracts\OperatorInterface;
 
-class OperatorManager extends Manager
+class OperatorManager extends Manager implements OperatorFactoryInterface
 {
     public function use(string $operator): OperatorInterface
     {

@@ -8,9 +8,9 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Arr;
 use Mitoop\LaravelQueryBuilder\Contracts\BuilderAwareInterface;
 use Mitoop\LaravelQueryBuilder\Contracts\FilterAwareInterface;
+use Mitoop\LaravelQueryBuilder\Contracts\OperatorFactoryInterface;
 use Mitoop\LaravelQueryBuilder\Contracts\OperatorManagerAwareInterface;
 use Mitoop\LaravelQueryBuilder\Contracts\ResolverInterface;
-use Mitoop\LaravelQueryBuilder\Support\Operators\OperatorManager;
 use Mitoop\LaravelQueryBuilder\Support\ValueHelper;
 use Mitoop\LaravelQueryBuilder\Traits\HasBuilder;
 
@@ -80,7 +80,7 @@ abstract class AbstractFilter implements BuilderAwareInterface
                         }
 
                         if ($resolver instanceof OperatorManagerAwareInterface) {
-                            $resolver->withOperatorManager(app(OperatorManager::class));
+                            $resolver->withOperatorManager(app(OperatorFactoryInterface::class));
                         }
 
                         $resolver->resolve();

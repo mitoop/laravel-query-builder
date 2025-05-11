@@ -3,7 +3,7 @@
 namespace Mitoop\LaravelQueryBuilder\Operators;
 
 use Illuminate\Database\Eloquent\Builder;
-use Mitoop\LaravelQueryBuilder\Support\Operators\OperatorInterface;
+use Mitoop\LaravelQueryBuilder\Contracts\OperatorInterface;
 
 class LikeAnyOperator implements OperatorInterface
 {

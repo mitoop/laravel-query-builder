@@ -5,6 +5,7 @@ namespace Mitoop\LaravelQueryBuilder;
 use Illuminate\Database\Eloquent\Builder;
 use InvalidArgumentException;
 use Mitoop\LaravelQueryBuilder\Commands\MakeFilterCommand;
+use Mitoop\LaravelQueryBuilder\Contracts\OperatorFactoryInterface;
 use Mitoop\LaravelQueryBuilder\Contracts\RuleResolverInterface;
 use Mitoop\LaravelQueryBuilder\Contracts\SortResolverInterface;
 use Mitoop\LaravelQueryBuilder\Operators\LikeAnyOperator;
@@ -20,7 +21,7 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
     ];
 
     public $singletons = [
-        OperatorManager::class => OperatorManager::class,
+        OperatorFactoryInterface::class => OperatorManager::class,
     ];
 
     public function boot(): void
@@ -59,6 +60,6 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
             return $filter();
         });
 
-        $this->app->get(OperatorManager::class)->extend('like_any', fn () => new LikeAnyOperator);
+        app(OperatorFactoryInterface::class)->extend('like_any', fn () => new LikeAnyOperator);
     }
 }
