@@ -2,15 +2,16 @@
 
 namespace Mitoop\LaravelQueryBuilder\Traits;
 
+use Mitoop\LaravelQueryBuilder\Contracts\OperatorFactoryInterface;
 use Mitoop\LaravelQueryBuilder\Support\Operators\OperatorManager;
 
 trait HasOperatorManager
 {
-    protected OperatorManager $operatorManager;
+    protected OperatorManager $operatorFactory;
 
-    public function withOperatorManager(OperatorManager $operatorManager): static
+    public function withOperatorFactory(OperatorFactoryInterface $operatorFactory): static
     {
-        $this->operatorManager = $operatorManager;
+        $this->operatorFactory = $operatorFactory;
 
         return $this;
     }

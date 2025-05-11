@@ -8,14 +8,14 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Query\Expression;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
-use Mitoop\LaravelQueryBuilder\Contracts\OperatorManagerAwareInterface;
+use Mitoop\LaravelQueryBuilder\Contracts\OperatorFactoryAwareInterface;
 use Mitoop\LaravelQueryBuilder\Contracts\RuleResolverInterface;
 use Mitoop\LaravelQueryBuilder\Scope;
 use Mitoop\LaravelQueryBuilder\Support\ValueHelper;
 use Mitoop\LaravelQueryBuilder\Traits\HasOperatorManager;
 use ReflectionMethod;
 
-class RuleResolver implements OperatorManagerAwareInterface, RuleResolverInterface
+class RuleResolver implements OperatorFactoryAwareInterface, RuleResolverInterface
 {
     use HasOperatorManager;
 
@@ -93,7 +93,7 @@ class RuleResolver implements OperatorManagerAwareInterface, RuleResolverInterfa
         $whereType = $mix === 'and' ? 'where' : 'orWhere';
 
         foreach ($operatorAndValue as $operator => $value) {
-            $this->operatorManager->use($operator)->apply($builder, $whereType, $field, $value);
+            $this->operatorFactory->use($operator)->apply($builder, $whereType, $field, $value);
         }
     }
 }
