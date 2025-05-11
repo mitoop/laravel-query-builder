@@ -188,11 +188,11 @@ protected function rules(): array
 ```
 
 ### 排序：sorts 方法
-在构建搜索逻辑时，排序(Sorting)通常是不可或缺的功能。该包默认通过请求参数中的 sorts 字段提取排序条件，例如：
+在构建搜索逻辑时，排序(Sorting)通常是不可或缺的功能。该包默认通过请求参数中的 `sorts` 字段提取排序条件，例如：
 ```text
 sorts=-id,name
 ```
-上例表示按 id 倒序排序，再按 name 升序排序。
+上例表示按 `id` 倒序排序，再按 `name` 升序排序。
 #### 默认行为
 - 排序字段来源于请求参数 `sorts`，多个字段使用英文逗号分隔
 - 字段前加 - 表示降序(desc)，否则为升序(asc)
@@ -212,7 +212,7 @@ SortResolver::sortFieldUsing('order_by');
 这样会将排序字段提取逻辑从 `sorts` 切换为 `order_by`
 
 #### 覆盖排序逻辑
-如需完全控制排序逻辑，可通过重写 sorts() 方法实现：
+如需完全控制排序逻辑，可通过重写 `sorts()` 方法实现：
 ```php
 class UserFilter extends AbstractFilter
 {
