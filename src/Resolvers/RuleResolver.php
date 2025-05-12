@@ -73,6 +73,10 @@ class RuleResolver implements OperatorFactoryAwareInterface, RuleResolverInterfa
 
     protected function applyScope(Scope $scope): void
     {
+        if ($scope->shouldSkip()) {
+            return;
+        }
+
         $method = $scope->scopeName;
         $args = $scope->getArgs();
         $model = $this->builder->getModel();
