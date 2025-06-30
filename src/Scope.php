@@ -2,8 +2,6 @@
 
 namespace Mitoop\LaravelQueryBuilder;
 
-use Closure;
-
 class Scope
 {
     protected bool $condition = true;
@@ -20,9 +18,9 @@ class Scope
         return $this->args;
     }
 
-    public function when(bool|Closure $condition): static
+    public function when(mixed $condition): static
     {
-        $this->condition = is_callable($condition) ? (bool) call_user_func($condition) : $condition;
+        $this->condition = (bool) (is_callable($condition) ? call_user_func($condition) : $condition);
 
         return $this;
     }
