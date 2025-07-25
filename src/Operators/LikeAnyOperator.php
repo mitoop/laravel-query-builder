@@ -10,17 +10,17 @@ class LikeAnyOperator implements OperatorInterface
 {
     public function apply(Builder $builder, string $whereType, string $field, $value): void
     {
-        [$field, $columns] = $value;
+        [$keyword, $columns] = $value;
 
-        $builder->{"{$whereType}"}(function (Builder $query) use ($columns, $field) {
+        $builder->{"{$whereType}"}(function (Builder $query) use ($columns, $keyword) {
             foreach ($columns as $key => $column) {
                 if (is_int($key)) {
-                    $query->orWhere($column, 'like', $field);
+                    $query->orWhere($column, 'like', $keyword);
                 } elseif (is_array($column)) {
                     $relation = $key;
-                    $query->orWhereHas($relation, function (Builder $q) use ($column, $field) {
+                    $query->orWhereHas($relation, function (Builder $q) use ($column, $keyword) {
                         foreach ($column as $relField) {
-                            $q->orWhere($relField, 'like', $field);
+                            $q->orWhere($relField, 'like', $keyword);
                         }
                     });
                 } elseif ($column instanceof Closure) {
