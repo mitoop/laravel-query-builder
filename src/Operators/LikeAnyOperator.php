@@ -10,7 +10,7 @@ class LikeAnyOperator implements OperatorInterface
 {
     public function apply(Builder $builder, string $whereType, string $field, $value): void
     {
-        [$keyword, $columns] = $value;
+        [$columns, $keyword] = $value;
 
         $builder->{"{$whereType}"}(function (Builder $query) use ($columns, $keyword) {
             foreach ($columns as $key => $column) {
