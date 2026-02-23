@@ -12,6 +12,12 @@ class LikeAny implements ValueResolver
     {
         $value = (string) $value;
 
+        $value = preg_replace('/[^\P{C}\n]+/u', '', $value) ?? '';
+
+        if ($value === '') {
+            return [$this->fields, ''];
+        }
+
         $escaped = addcslashes($value, '\%_');
 
         return [$this->fields, "%{$escaped}%"];

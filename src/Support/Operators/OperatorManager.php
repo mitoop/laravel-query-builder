@@ -57,6 +57,11 @@ class OperatorManager extends Manager implements OperatorFactoryInterface
         return new NotNullOperator;
     }
 
+    protected function createLikeDriver()
+    {
+        return new LikeOperator;
+    }
+
     protected function createDriver($driver)
     {
         $driver = $this->normalize($driver);

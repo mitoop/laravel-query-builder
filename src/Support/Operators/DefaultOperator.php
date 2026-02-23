@@ -47,7 +47,6 @@ class DefaultOperator implements OperatorInterface
             'lt' => '<',
             'lte' => '<=',
             'le' => '<=',
-            'like' => 'like',
         ][$operator] ?? $operator;
     }
 }

@@ -12,6 +12,12 @@ class Like implements ValueResolver
     {
         $value = (string) $value;
 
+        $value = preg_replace('/[^\P{C}\n]+/u', '', $value) ?? '';
+
+        if ($value === '') {
+            return '';
+        }
+
         $escaped = addcslashes($value, '\%_');
 
         return $this->prefix.$escaped.$this->suffix;
