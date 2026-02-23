@@ -18,7 +18,13 @@ class OperatorManager extends Manager implements OperatorFactoryInterface
 
     public function register(string $name, Closure $callback): static
     {
-        return $this->extend($name, $callback);
+        $key = $this->normalize($name);
+
+        if (isset($this->customCreators[$key])) {
+            throw new InvalidArgumentException("Operator [$key] already registered.");
+        }
+
+        return $this->extend($key, $callback);
     }
 
     protected function createInDriver()
@@ -53,6 +59,8 @@ class OperatorManager extends Manager implements OperatorFactoryInterface
 
     protected function createDriver($driver)
     {
+        $driver = $this->normalize($driver);
+
         if (isset($this->customCreators[$driver])) {
             return $this->callCustomCreator($driver);
         }
@@ -69,5 +77,10 @@ class OperatorManager extends Manager implements OperatorFactoryInterface
     public function getDefaultDriver(): string
     {
         throw new InvalidArgumentException('Please call `use()` with the desired operator name.');
+    }
+
+    protected function normalize(string $name): string
+    {
+        return Str::snake(Str::lower($name));
     }
 }
