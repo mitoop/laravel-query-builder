@@ -10,6 +10,10 @@ class LikeAny implements ValueResolver
 
     public function resolve($value): array
     {
-        return [$this->fields, "%$value%"];
+        $value = (string) $value;
+
+        $escaped = addcslashes($value, '\%_');
+
+        return [$this->fields, "%{$escaped}%"];
     }
 }

@@ -10,6 +10,10 @@ class Like implements ValueResolver
 
     public function resolve($value): string
     {
-        return $this->prefix.$value.$this->suffix;
+        $value = (string) $value;
+
+        $escaped = addcslashes($value, '\%_');
+
+        return $this->prefix.$escaped.$this->suffix;
     }
 }
