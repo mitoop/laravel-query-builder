@@ -13,7 +13,7 @@ class OperatorManager extends Manager implements OperatorFactoryInterface
 {
     public function use(string $operator): OperatorInterface
     {
-        return $this->driver($operator);
+        return $this->driver($this->normalize($operator));
     }
 
     public function register(string $name, Closure $callback): static
@@ -86,6 +86,6 @@ class OperatorManager extends Manager implements OperatorFactoryInterface
 
     protected function normalize(string $name): string
     {
-        return Str::snake(Str::lower($name));
+        return Str::snake($name);
     }
 }
