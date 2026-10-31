@@ -4,7 +4,7 @@ namespace Mitoop\LaravelQueryBuilder\Traits;
 
 use Mitoop\LaravelQueryBuilder\Contracts\OperatorFactoryInterface;
 
-trait HasOperatorManager
+trait HasOperatorFactory
 {
     protected OperatorFactoryInterface $operatorFactory;
 

@@ -11,7 +11,7 @@ use Mitoop\LaravelQueryBuilder\Contracts\FilterAwareInterface;
 use Mitoop\LaravelQueryBuilder\Contracts\OperatorFactoryAwareInterface;
 use Mitoop\LaravelQueryBuilder\Contracts\OperatorFactoryInterface;
 use Mitoop\LaravelQueryBuilder\Contracts\ResolverInterface;
-use Mitoop\LaravelQueryBuilder\Support\ValueHelper;
+use Mitoop\LaravelQueryBuilder\Support\RuleParser;
 use Mitoop\LaravelQueryBuilder\Traits\HasBuilder;
 
 abstract class AbstractFilter implements BuilderAwareInterface
@@ -98,7 +98,7 @@ abstract class AbstractFilter implements BuilderAwareInterface
     {
         $value = Arr::get($this->data, $field);
 
-        if (ValueHelper::isMeaningless($value)) {
+        if (RuleParser::isMeaningless($value)) {
             return null;
         }
 

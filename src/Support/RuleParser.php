@@ -6,7 +6,7 @@ use Illuminate\Support\Arr;
 use InvalidArgumentException;
 use Mitoop\LaravelQueryBuilder\Contracts\ValueResolver;
 
-class ValueHelper
+class RuleParser
 {
     public static function isMeaningless(mixed $value): bool
     {

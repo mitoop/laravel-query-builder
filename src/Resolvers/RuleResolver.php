@@ -10,13 +10,13 @@ use InvalidArgumentException;
 use Mitoop\LaravelQueryBuilder\Contracts\OperatorFactoryAwareInterface;
 use Mitoop\LaravelQueryBuilder\Contracts\RuleResolverInterface;
 use Mitoop\LaravelQueryBuilder\Scope;
-use Mitoop\LaravelQueryBuilder\Support\ValueHelper;
-use Mitoop\LaravelQueryBuilder\Traits\HasOperatorManager;
+use Mitoop\LaravelQueryBuilder\Support\RuleParser;
+use Mitoop\LaravelQueryBuilder\Traits\HasOperatorFactory;
 use ReflectionMethod;
 
 class RuleResolver implements OperatorFactoryAwareInterface, RuleResolverInterface
 {
-    use HasOperatorManager;
+    use HasOperatorFactory;
 
     public function __construct(protected Builder $builder, protected array $definition, protected array $input) {}
 
@@ -41,7 +41,7 @@ class RuleResolver implements OperatorFactoryAwareInterface, RuleResolverInterfa
                 continue;
             }
 
-            $resolved = ValueHelper::resolveField($key, $item, $this->input);
+            $resolved = RuleParser::resolveField($key, $item, $this->input);
 
             if (is_null($resolved)) {
                 continue;

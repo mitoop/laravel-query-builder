@@ -1,6 +1,6 @@
 <?php
 
-namespace Mitoop\LaravelQueryBuilder\Operators;
+namespace Mitoop\LaravelQueryBuilder\Support\Operators;
 
 use Closure;
 use Illuminate\Database\Eloquent\Builder;
