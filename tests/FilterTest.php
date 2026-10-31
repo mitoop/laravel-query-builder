@@ -8,6 +8,7 @@ use Mitoop\LaravelQueryBuilder\AbstractFilter;
 use Mitoop\LaravelQueryBuilder\Contracts\OperatorFactoryInterface;
 use Mitoop\LaravelQueryBuilder\Contracts\OperatorInterface;
 use Mitoop\LaravelQueryBuilder\Scope;
+use Mitoop\LaravelQueryBuilder\Tests\Fixtures\AttributeScopedUser;
 use Mitoop\LaravelQueryBuilder\Tests\Fixtures\User;
 use Mitoop\LaravelQueryBuilder\ValueResolvers\DateRange;
 use Mitoop\LaravelQueryBuilder\ValueResolvers\Like;
@@ -162,7 +163,7 @@ class FilterTest extends PackageTestCase
             {
                 return [new Scope('active')];
             }
-        }, model: \Mitoop\LaravelQueryBuilder\Tests\Fixtures\AttributeScopedUser::class);
+        }, model: AttributeScopedUser::class);
 
         $this->assertSame([1], $builder->getBindings());
     }

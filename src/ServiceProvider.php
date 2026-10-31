@@ -8,9 +8,9 @@ use Mitoop\LaravelQueryBuilder\Commands\MakeFilterCommand;
 use Mitoop\LaravelQueryBuilder\Contracts\OperatorFactoryInterface;
 use Mitoop\LaravelQueryBuilder\Contracts\RuleResolverInterface;
 use Mitoop\LaravelQueryBuilder\Contracts\SortResolverInterface;
-use Mitoop\LaravelQueryBuilder\Support\Operators\LikeAnyOperator;
 use Mitoop\LaravelQueryBuilder\Resolvers\RuleResolver;
 use Mitoop\LaravelQueryBuilder\Resolvers\SortResolver;
+use Mitoop\LaravelQueryBuilder\Support\Operators\LikeAnyOperator;
 use Mitoop\LaravelQueryBuilder\Support\Operators\OperatorManager;
 
 class ServiceProvider extends \Illuminate\Support\ServiceProvider
@@ -33,7 +33,7 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
         }
 
         /**
-         * @return \Illuminate\Database\Eloquent\Builder
+         * @return Builder
          */
         Builder::macro('filter', function (string|array $filterClass, array $data = []) {
             $filter = is_array($filterClass)

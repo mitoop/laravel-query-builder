@@ -24,6 +24,7 @@
         "laravel/framework": "^11|^12|^13"
     },
     "require-dev": {
+        "laravel/pint": "^1.30",
         "orchestra/testbench": "^9.0|^10.0|^11.0",
         "phpunit/phpunit": "^10.5|^11.5|^12.0"
     },
@@ -33,6 +34,7 @@
         }
     },
     "scripts": {
-        "test": "@php vendor/bin/phpunit"
+        "test": "@php vendor/bin/phpunit",
+        "format": "@php vendor/bin/pint"
     }
 }

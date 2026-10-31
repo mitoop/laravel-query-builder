@@ -129,13 +129,22 @@ protected function rules(): array
 自定义操作符在 `AppServiceProvider::boot()` 里注册：
 
 ```php
-use App\Operators\NewOperator;
+use Illuminate\Database\Eloquent\Builder;
 use Mitoop\LaravelQueryBuilder\Contracts\OperatorFactoryInterface;
+use Mitoop\LaravelQueryBuilder\Contracts\OperatorInterface;
 
-app(OperatorFactoryInterface::class)->register('new_operator', fn () => new NewOperator);
+class BeforeOperator implements OperatorInterface
+{
+    public function apply(Builder $builder, string $whereType, string $field, $value): void
+    {
+        $builder->{$whereType}($field, '<', $value);
+    }
+}
+
+app(OperatorFactoryInterface::class)->register('before', fn () => new BeforeOperator);
 ```
 
-`register()` 收到的类要实现 `Mitoop\LaravelQueryBuilder\Contracts\OperatorInterface`。
+注册名就是规则里的操作符，例如 `published_at|before`。
 
 ## 值处理
 
@@ -189,7 +198,7 @@ protected function rules(): array
 {
     return [
         new Scope('active'),
-        new Scope('role', (int) $this->value('role_id'))->when((bool) $this->value('role_id')),
+        (new Scope('role', (int) $this->value('role_id')))->when((bool) $this->value('role_id')),
         function (Builder $builder): void {
             $builder->where('is_verified', true);
         },
@@ -246,9 +255,18 @@ protected function with(): array
 }
 ```
 
-`with()` 需要是 `public` 或 `protected`。重写 `boot()` 时先调用父类，否则上面的预加载不会执行。
+`with()` 需要是 `public` 或 `protected`。重写 `boot()` 时先调用父类，否则上面的预加载不会执行：
 
-`booting()` 在构建查询前运行，适合补默认筛选值。请求里已经带了 `status` 时，下面这行不会覆盖它：
+```php
+public function boot(): void
+{
+    parent::boot();
+}
+```
+
+## 默认筛选值
+
+`booting()` 在请求数据写入之后、规则生效之前运行。请求里已经带了 `status` 时，下面这行不会覆盖它：
 
 ```php
 public function booting(): void
