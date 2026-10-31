@@ -248,13 +248,11 @@ protected function with(): array
 
 `with()` 需要是 `public` 或 `protected`。重写 `boot()` 时先调用父类，否则上面的预加载不会执行。
 
-`booting()` 在写入请求数据之前运行。补默认筛选值要写在 `boot()` 里，这时 `$this->data` 才有请求内容：
+`booting()` 在构建查询前运行，适合补默认筛选值。请求里已经带了 `status` 时，下面这行不会覆盖它：
 
 ```php
-public function boot(): void
+public function booting(): void
 {
-    parent::boot();
-
     $this->data['status'] ??= 'active';
 }
 ```

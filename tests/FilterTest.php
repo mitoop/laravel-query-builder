@@ -211,6 +211,25 @@ class FilterTest extends PackageTestCase
         $this->assertCount(1, $byId->getQuery()->orders);
     }
 
+    public function test_booting_fills_a_missing_filter_value(): void
+    {
+        $filter = new class extends AbstractFilter
+        {
+            public function booting(): void
+            {
+                $this->data['status'] ??= 'active';
+            }
+
+            protected function rules(): array
+            {
+                return ['status'];
+            }
+        };
+
+        $this->assertSame(['active'], $this->apply($filter)->getBindings());
+        $this->assertSame(['closed'], $this->apply($filter, ['status' => 'closed'])->getBindings());
+    }
+
     public function test_with_method_eager_loads_relations(): void
     {
         $builder = $this->apply(new class extends AbstractFilter

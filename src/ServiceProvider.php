@@ -53,10 +53,10 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
             }
 
             $filter->withBuilder($this);
+            $filter->setData($data ?: request()->all());
             $filter->booting();
 
-            $filter->setData($data ?: request()->all())
-                ->addResolver('rules', RuleResolverInterface::class)
+            $filter->addResolver('rules', RuleResolverInterface::class)
                 ->addResolver('sorts', SortResolverInterface::class);
             $filter->boot();
 
