@@ -1,5 +1,7 @@
 # Laravel Query Builder
 
+**Laravel Query Builder** 是一个基于接口设计、具备高扩展性的渐进式搜索构建包，旨在让 Laravel 中的复杂搜索变得**更简单、更清晰、更优雅**。
+
 把列表筛选从控制器收进 Filter。`rules()` 里声明条件，调用后仍是原来的 Eloquent 查询，可以继续 `with()`、`paginate()`、`get()`。
 
 ## 环境要求
