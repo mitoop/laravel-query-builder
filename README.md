@@ -1,30 +1,11 @@
 # Laravel Query Builder
 
-**Laravel Query Builder** 是一个基于接口设计、具备高扩展性的渐进式搜索构建包，旨在让 Laravel 中的复杂搜索变得**更简单、更清晰、更优雅**。
+把列表筛选从控制器收进 Filter。`rules()` 里声明条件，调用后仍是原来的 Eloquent 查询，可以继续 `with()`、`paginate()`、`get()`。
 
-它将搜索逻辑从控制器中彻底解耦，使列表搜索功能的开发更加集中、可维护，同时支持高度复用和灵活扩展。
-
-本包的设计灵感来源于 [zhuzhichao/laravel-advanced-search](https://github.com/matrix-lab/laravel-advanced-search) 和 [spatie/laravel-query-builder](https://github.com/spatie/laravel-query-builder)，并结合实际业务需求进行了增强与重构。
-
----
-
-## 特性
-
-* **DSL 搜索规则**：集中定义搜索逻辑，支持声明式、结构化、可复用的规则。
-* **支持排序与分页**：可自定义排序字段，兼容 `paginate()`、`get()` 等链式调用。
-* **值处理器(ValueResolver)**：统一处理输入值转换，避免重复闭包。
-* **字段类型灵活**：支持 JSON 字段、关联字段、表别名字段。
-* **高级扩展**：支持原生 SQL、闭包、自定义操作符、模型 Scope。
-* **接口驱动**：几乎所有功能可通过自定义类替换，实现高度扩展。
-
----
-
-## 环境需求
+## 环境要求
 
 * PHP ^8.2
 * Laravel ^11.0 | ^12.0 | ^13.0
-
----
 
 ## 安装
 
@@ -32,19 +13,19 @@
 composer require mitoop/laravel-query-builder
 ```
 
----
-
-## 快速上手
-
-### 创建 Filter 类
-
-Filter 类用于集中定义搜索逻辑，可通过 Artisan 快速生成：
+## 定义 Filter
 
 ```bash
 php artisan make:filter UserFilter
 ```
 
+命令会在 `App\Http\Filters` 下生成类：
+
 ```php
+<?php
+
+namespace App\Http\Filters;
+
 use Mitoop\LaravelQueryBuilder\AbstractFilter;
 
 class UserFilter extends AbstractFilter
@@ -58,211 +39,230 @@ class UserFilter extends AbstractFilter
 }
 ```
 
-调用示例：
+控制器里：
 
 ```php
+use App\Http\Filters\UserFilter;
+use App\Models\User;
+
 $users = User::filter(UserFilter::class)->paginate();
 ```
 
-返回的是原生 Eloquent 查询构建器，仍支持链式调用 `with()`、`paginate()`、`get()` 等。
-
----
-
-## DSL 搜索规则
-
-### 传统写法（控制器硬编码）
+不传第二个参数，或传入空数组时，使用当前请求的全部输入。要换成别的数据时传进去：
 
 ```php
-if ($request->filled('name')) {
-    $query->where('name', $request->input('name'));
-}
-if ($request->filled('email')) {
-    $query->where('email', 'like', '%'.$request->input('email').'%');
-}
+User::filter(UserFilter::class, $request->validated())->paginate();
 ```
 
-### 使用 DSL（集中在 Filter 中）
+规则也可以直接写成数组，不必先建类：
 
 ```php
+User::filter([
+    'name',
+    'status|in',
+])->paginate();
+```
+
+值为 `null`、空字符串或空数组的规则会跳过。
+
+## 搜索规则
+
+规则写在 `rules()` 里。字符串的格式是：
+
+```text
+[请求字段]:[数据库字段]|[操作符]
+```
+
+冒号和竖线都可以省略。省略冒号时，请求字段和数据库字段同名。省略操作符时，用 `eq`。
+
+```php
+use Mitoop\LaravelQueryBuilder\ValueResolvers\DateRange;
+use Mitoop\LaravelQueryBuilder\ValueResolvers\Like;
+
 protected function rules(): array
 {
     return [
         'name',
         'email|like' => new Like,
-    ];
-}
-```
-
-### DSL 优势
-
-* **集中管理**：所有规则在 `rules()` 中定义，控制器无需关心细节。
-* **结构化**：清晰、易于阅读和维护。
-* **高复用**：支持自定义操作符和值处理器，可在多个 Filter 中复用。
-* **可扩展**：轻松支持 JSON、关联字段、模型 Scope 等复杂查询。
-
----
-
-### 规则格式
-
-```text
-[前端字段名]:[数据库字段]|[操作符]
-```
-
-* 冒号用于前端字段与数据库字段映射（可选）
-* 竖线用于指定操作符（可选）
-* 支持索引数组、关联数组混合定义
-
-示例：
-
-```php
-use Mitoop\LaravelQueryBuilder\ValueResolvers\DateRange;
-use Mitoop\LaravelQueryBuilder\ValueResolvers\Like;
-
-protected function rules(): array
-{
-    return [
-        'name', // 默认 eq
-        'email|like' => new Like,
+        'created_from:created_at|gte',
+        'created_to:created_at|lte',
         'created_at|between' => new DateRange,
         'nickname:profile->nickname|like' => new Like,
         'position$name|like' => new Like,
+        'u.name',
     ];
 }
 ```
 
----
+| 写法 | 含义 |
+| --- | --- |
+| `name` | 请求里的 `name` 等于 `name` 列 |
+| `email\|like` | 用 `like` 比较 `email` |
+| `created_from:created_at\|gte` | 请求字段是 `created_from`，列是 `created_at` |
+| `profile->nickname` | JSON 路径 |
+| `position$name` | `position` 关联上的 `name` 列 |
+| `u.name` | 带表别名的列 |
 
-### 支持的操作符
+`position$name` 会变成 `whereHas('position', ...)`。关联名会转成驼峰，`user_profile$bio` 对应 `userProfile`。
 
-* 基础：`eq`, `ne`, `gt`, `lt`, `gte`, `lte`, `like`, `in`, `not_in`, `between`, `is_null`, `not_null`
-* JSON：`json_contains`
-* `in` 和 `not_in` 接受数组，也接受逗号分隔的字符串，例如 `1,2`
-* `between` 需要正好两个值，可以是数组，也可以是 `start,end`。数量不对会抛出 `InvalidArgumentException`
-* 数据库不认识的操作符会抛出 `InvalidArgumentException`
-* 自定义操作符：在 `AppServiceProvider` 注册
+## 操作符
+
+| 操作符 | 作用 |
+| --- | --- |
+| `eq` | `=`，默认 |
+| `ne` | `<>` |
+| `gt` / `lt` | `>` / `<` |
+| `gte` / `ge` | `>=` |
+| `lte` / `le` | `<=` |
+| `like` | `like`。通配符由值处理器加上，操作符本身不包 `%` |
+| `in` / `not_in` | 数组，或 `1,2` 这种逗号分隔的字符串 |
+| `between` | 正好两个值，数组或 `start,end`。数量不对会抛异常 |
+| `is_null` / `not_null` | 请求值为真时才加上 `whereNull` / `whereNotNull` |
+| `json_contains` | JSON 包含 |
+
+数据库不认识的操作符会抛出 `InvalidArgumentException`。
+
+自定义操作符在 `AppServiceProvider::boot()` 里注册：
 
 ```php
+use App\Operators\NewOperator;
 use Mitoop\LaravelQueryBuilder\Contracts\OperatorFactoryInterface;
 
 app(OperatorFactoryInterface::class)->register('new_operator', fn () => new NewOperator);
 ```
 
----
+`register()` 收到的类要实现 `Mitoop\LaravelQueryBuilder\Contracts\OperatorInterface`。
 
-### 值处理器 ValueResolver
+## 值处理
 
-用于统一处理输入值，例如模糊搜索或日期范围。包里提供了这三个：
+操作符只决定比较方式。`%`、日期边界这类转换交给值处理器。
 
-* `Mitoop\LaravelQueryBuilder\ValueResolvers\Like`：在关键字两侧加上 `%`，并转义用户输入里的 `%`、`_` 和 `\`
-* `Mitoop\LaravelQueryBuilder\ValueResolvers\LikeAny`：同一套转义，同时匹配多个字段
-* `Mitoop\LaravelQueryBuilder\ValueResolvers\DateRange`：把两个日期转成当天的开始和结束。格式不对时这条规则会跳过
+* `Mitoop\LaravelQueryBuilder\ValueResolvers\Like`：两侧加上 `%`，并转义输入里的 `%`、`_` 和 `\`
+* `Mitoop\LaravelQueryBuilder\ValueResolvers\LikeAny`：同一套转义，匹配多个列
+* `Mitoop\LaravelQueryBuilder\ValueResolvers\DateRange`：把两个日期转成当天的开始和结束。格式不对时这条规则跳过
 
 ```php
 use Mitoop\LaravelQueryBuilder\ValueResolvers\DateRange;
 use Mitoop\LaravelQueryBuilder\ValueResolvers\Like;
+use Mitoop\LaravelQueryBuilder\ValueResolvers\LikeAny;
 
 protected function rules(): array
 {
     return [
         'email|like' => new Like,
+        'keyword|like_any' => new LikeAny(['name', 'email']),
         'created_at|between' => new DateRange,
     ];
 }
 ```
 
-> 前端传入 `null`、空字符串或空数组时，这条规则会跳过。
+`Like` 的前后缀可以改，例如只匹配开头：`new Like('', '%')`。
 
----
-
-### 高级规则支持
-
-* **原生 SQL**：`DB::raw(...)`
-* **闭包查询**：
+字段有值时才追加一段查询，用 `whenValue()`：
 
 ```php
-function (Builder $builder) {
-    $builder->where('is_verified', true);
-}
-```
+use Illuminate\Database\Eloquent\Builder;
 
-* **模型 Scope**：`new Scope('email_verified')` 会调用 `scopeEmailVerified`。`emailVerified` 和 `email_verified` 都能对上。Laravel 12 起也可以用 `#[Scope]` 标记方法；Laravel 11 只有 `scopeXxx` 这种写法
-* **关键词搜索**：
-
-```php
-$this->whenValue('keyword', function(Builder $builder, $keyword) {
-    $builder->whereAny(['name', 'email'], 'like', "%{$keyword}%");
+$this->whenValue('keyword', function (Builder $builder, string $keyword): void {
+    $builder->whereAny(['name', 'email'], 'like', '%'.$keyword.'%');
 });
 ```
 
----
+这里的 `%` 不会自动转义。用户输入里可能带有通配符时，用 `Like` 或 `LikeAny`。
 
-### 排序：sorts 方法
+自定义处理器实现 `Mitoop\LaravelQueryBuilder\Contracts\ValueResolver`，在 `resolve()` 里返回给操作符的值。
 
-默认通过请求参数 `sorts` 提取排序条件，例如：
+## 关联、Scope 和原生条件
 
+`rules()` 里也可以放 Scope、闭包和 `DB::raw()`。
+
+```php
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\DB;
+use Mitoop\LaravelQueryBuilder\Scope;
+
+protected function rules(): array
+{
+    return [
+        new Scope('active'),
+        new Scope('role', (int) $this->value('role_id'))->when((bool) $this->value('role_id')),
+        function (Builder $builder): void {
+            $builder->where('is_verified', true);
+        },
+        DB::raw('users.score > 100'),
+    ];
+}
 ```
+
+`new Scope('emailVerified')` 和 `new Scope('email_verified')` 都会调用模型上的 `scopeEmailVerified`。`when()` 的条件不成立时，这个 Scope 不会加入查询。
+
+Laravel 12 起，模型方法也可以用 `#[Scope]` 标记。Laravel 11 只有 `scopeXxx` 这种写法。
+
+## 排序
+
+请求参数默认是 `sorts`。字段前加 `-` 表示降序：
+
+```text
 sorts=-id,name
 ```
 
-* 字段前加 `-` 表示降序，其他为升序
-* 可通过 `$allowedSorts` 限制允许排序字段
+只有 `$allowedSorts` 里的字段会生效，其余忽略。默认只允许 `id`。
 
 ```php
 protected array $allowedSorts = ['id', 'name', 'created_at'];
 ```
 
-* 自定义请求参数：在 Filter 上声明 `$sortField`。每个 Filter 用自己的字段名，不会影响到其他 Filter。
+换参数名时改 `$sortField`。每个 Filter 用自己的名字：
 
 ```php
 protected string $sortField = 'order_by';
 ```
 
-* 完全自定义排序：
+`sorts()` 返回非空数组时，不再读取请求里的排序：
 
 ```php
 protected function sorts(): array
 {
     return [
         'id' => 'desc',
-        'created_at asc',
     ];
 }
 ```
 
----
+数字下标的值会原样写进 `orderByRaw()`，例如 `'created_at asc'`。
 
-### 生命周期钩子
+## 预加载
 
-* **booting()**：执行构建逻辑前调用，适合设置默认参数
-
-```php
-public function booting(): void
-{
-    $this->data['status'] ??= 'active';
-}
-```
-
-* **boot()**：构建逻辑正式开始前调用。Filter 如果定义了 `with()`，这里会自动预加载。重写 `boot()` 时要先调用 `parent::boot()`。
+Filter 定义了 `with()` 时，查询构建前会自动预加载：
 
 ```php
 protected function with(): array
 {
     return ['org', 'roles'];
 }
+```
 
+`with()` 需要是 `public` 或 `protected`。重写 `boot()` 时先调用父类，否则上面的预加载不会执行。
+
+`booting()` 在写入请求数据之前运行。补默认筛选值要写在 `boot()` 里，这时 `$this->data` 才有请求内容：
+
+```php
 public function boot(): void
 {
     parent::boot();
+
+    $this->data['status'] ??= 'active';
 }
 ```
 
----
-
-### 完整示例：UserFilter
+## 完整示例
 
 ```php
+<?php
+
+namespace App\Http\Filters;
+
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Facades\DB;
 use Mitoop\LaravelQueryBuilder\AbstractFilter;
 use Mitoop\LaravelQueryBuilder\Scope;
 use Mitoop\LaravelQueryBuilder\ValueResolvers\DateRange;
@@ -277,7 +277,7 @@ class UserFilter extends AbstractFilter
     {
         return [
             'id',
-            'name|like'  => new Like,
+            'name|like' => new Like,
             'email|like' => new Like,
             'status|in',
             'created_from:created_at|gte',
@@ -286,34 +286,28 @@ class UserFilter extends AbstractFilter
             'nickname:profile->nickname|like' => new Like,
             'tag:profile->tags|json_contains',
             'position$name|like' => new Like,
-            'u.name',
-            new Scope('active'),
-            $this->whenValue('keyword', function (Builder $builder, $keyword) {
-                $builder->whereAny(['name', 'email'], 'like', "%{$keyword}%");
-            }),
             'keyword|like_any' => new LikeAny(['name', 'email']),
-            DB::raw('users.score > 100'),
-            function (Builder $builder) {
-                $builder->where('is_verified', true);
-            },
+            new Scope('active'),
+            $this->whenValue('role_id', function (Builder $builder, int|string $roleId): void {
+                $builder->where('role_id', (int) $roleId);
+            }),
         ];
+    }
+
+    protected function with(): array
+    {
+        return ['position'];
     }
 }
 ```
 
-控制器使用：
-
 ```php
-$users = User::filter(UserFilter::class)->paginate();
+User::filter(UserFilter::class)->paginate();
 ```
-
----
 
 ## 贡献
 
-有什么新的想法和建议，欢迎提交 [issue](https://github.com/mitoop/laravel-query-builder/issues) 或 [Pull Requests](https://github.com/mitoop/laravel-query-builder/pulls)。
-
----
+欢迎提交 [issue](https://github.com/mitoop/laravel-query-builder/issues) 或 [Pull Request](https://github.com/mitoop/laravel-query-builder/pulls)。
 
 ## 协议
 
