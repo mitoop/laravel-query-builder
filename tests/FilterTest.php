@@ -129,7 +129,7 @@ class FilterTest extends PackageTestCase
         {
             protected function rules(): array
             {
-                return [new Scope('active')->when(false)];
+                return [(new Scope('active'))->when(false)];
             }
         });
 
