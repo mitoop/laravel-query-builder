@@ -1,10 +1,16 @@
 {
     "name": "mitoop/laravel-query-builder",
+    "description": "Declarative Eloquent filters for Laravel.",
     "type": "library",
     "license": "MIT",
     "autoload": {
         "psr-4": {
             "Mitoop\\LaravelQueryBuilder\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Mitoop\\LaravelQueryBuilder\\Tests\\": "tests/"
         }
     },
     "authors": [
@@ -14,11 +20,19 @@
         }
     ],
     "require": {
+        "php": "^8.2",
         "laravel/framework": "^11|^12|^13"
+    },
+    "require-dev": {
+        "orchestra/testbench": "^9.0|^10.0|^11.0",
+        "phpunit/phpunit": "^10.5|^11.5|^12.0"
     },
     "extra": {
         "laravel": {
             "providers": ["Mitoop\\LaravelQueryBuilder\\ServiceProvider"]
         }
+    },
+    "scripts": {
+        "test": "@php vendor/bin/phpunit"
     }
 }

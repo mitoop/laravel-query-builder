@@ -21,8 +21,8 @@
 
 ## 环境需求
 
-* PHP >= 8.2
-* Laravel ^11.0 | ^12.0
+* PHP ^8.2
+* Laravel ^11.0 | ^12.0 | ^13.0
 
 ---
 
@@ -45,6 +45,8 @@ php artisan make:filter UserFilter
 ```
 
 ```php
+use Mitoop\LaravelQueryBuilder\AbstractFilter;
+
 class UserFilter extends AbstractFilter
 {
     protected array $allowedSorts = ['id'];
@@ -113,11 +115,14 @@ protected function rules(): array
 示例：
 
 ```php
+use Mitoop\LaravelQueryBuilder\ValueResolvers\DateRange;
+use Mitoop\LaravelQueryBuilder\ValueResolvers\Like;
+
 protected function rules(): array
 {
     return [
         'name', // 默认 eq
-        'email|like' => $this->value('email', fn($email)=> "%{$email}%"),
+        'email|like' => new Like,
         'created_at|between' => new DateRange,
         'nickname:profile->nickname|like' => new Like,
         'position$name|like' => new Like,
@@ -131,51 +136,31 @@ protected function rules(): array
 
 * 基础：`eq`, `ne`, `gt`, `lt`, `gte`, `lte`, `like`, `in`, `not_in`, `between`, `is_null`, `not_null`
 * JSON：`json_contains`
+* `in` 和 `not_in` 接受数组，也接受逗号分隔的字符串，例如 `1,2`
+* `between` 需要正好两个值，可以是数组，也可以是 `start,end`。数量不对会抛出 `InvalidArgumentException`
+* 数据库不认识的操作符会抛出 `InvalidArgumentException`
 * 自定义操作符：在 `AppServiceProvider` 注册
 
 ```php
-app(OperatorFactoryInterface::class)->register('new_operator', fn($app) => new NewOperator);
+use Mitoop\LaravelQueryBuilder\Contracts\OperatorFactoryInterface;
+
+app(OperatorFactoryInterface::class)->register('new_operator', fn () => new NewOperator);
 ```
 
 ---
 
 ### 值处理器 ValueResolver
 
-用于统一处理输入值，例如模糊搜索或日期范围：
+用于统一处理输入值，例如模糊搜索或日期范围。包里提供了这三个：
+
+* `Mitoop\LaravelQueryBuilder\ValueResolvers\Like`：在关键字两侧加上 `%`，并转义用户输入里的 `%`、`_` 和 `\`
+* `Mitoop\LaravelQueryBuilder\ValueResolvers\LikeAny`：同一套转义，同时匹配多个字段
+* `Mitoop\LaravelQueryBuilder\ValueResolvers\DateRange`：把两个日期转成当天的开始和结束。格式不对时这条规则会跳过
 
 ```php
-class Like implements ValueResolver
-{
-    public function __construct(protected string $prefix = '%', protected string $suffix = '%') {}
+use Mitoop\LaravelQueryBuilder\ValueResolvers\DateRange;
+use Mitoop\LaravelQueryBuilder\ValueResolvers\Like;
 
-    public function resolve($value): string
-    {
-        return $this->prefix.$value.$this->suffix;
-    }
-}
-
-class DateRange implements ValueResolver
-{
-    public function resolve($value): ?array
-    {
-        if (! is_array($value) || count($value) !== 2) return null;
-
-        try {
-            [$start, $end] = $value;
-            $start = Carbon::parse($start)->startOfDay();
-            $end = Carbon::parse($end)->endOfDay();
-        } catch (Throwable) {
-            return null;
-        }
-
-        return [$start, $end];
-    }
-}
-```
-
-使用示例：
-
-```php
 protected function rules(): array
 {
     return [
@@ -185,7 +170,7 @@ protected function rules(): array
 }
 ```
 
-> 如果前端传入值为 `null` 或空数组，该规则会自动跳过，避免无效查询。
+> 前端传入 `null`、空字符串或空数组时，这条规则会跳过。
 
 ---
 
@@ -200,7 +185,7 @@ function (Builder $builder) {
 }
 ```
 
-* **模型 Scope**：支持 `scopeXxx()` 或 `#[Scope]` 注解
+* **模型 Scope**：`new Scope('email_verified')` 会调用 `scopeEmailVerified`。`emailVerified` 和 `email_verified` 都能对上。Laravel 12 起也可以用 `#[Scope]` 标记方法；Laravel 11 只有 `scopeXxx` 这种写法
 * **关键词搜索**：
 
 ```php
@@ -226,10 +211,10 @@ sorts=-id,name
 protected array $allowedSorts = ['id', 'name', 'created_at'];
 ```
 
-* 自定义请求参数：
+* 自定义请求参数：在 Filter 上声明 `$sortField`。每个 Filter 用自己的字段名，不会影响到其他 Filter。
 
 ```php
-SortResolver::sortFieldUsing('order_by');
+protected string $sortField = 'order_by';
 ```
 
 * 完全自定义排序：
@@ -257,14 +242,17 @@ public function booting(): void
 }
 ```
 
-* **boot()**：构建逻辑正式开始前调用，适合动态注册过滤器或修改行为
+* **boot()**：构建逻辑正式开始前调用。Filter 如果定义了 `with()`，这里会自动预加载。重写 `boot()` 时要先调用 `parent::boot()`。
 
 ```php
+protected function with(): array
+{
+    return ['org', 'roles'];
+}
+
 public function boot(): void
 {
-    if (method_exists($this, 'with')) {
-        $this->builder->with($this->with());
-    }
+    parent::boot();
 }
 ```
 
@@ -273,8 +261,13 @@ public function boot(): void
 ### 完整示例：UserFilter
 
 ```php
-use Mitoop\LaravelQueryBuilder\Filters\AbstractFilter;
-use Mitoop\LaravelQueryBuilder\Operators\Like;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\DB;
+use Mitoop\LaravelQueryBuilder\AbstractFilter;
+use Mitoop\LaravelQueryBuilder\Scope;
+use Mitoop\LaravelQueryBuilder\ValueResolvers\DateRange;
+use Mitoop\LaravelQueryBuilder\ValueResolvers\Like;
+use Mitoop\LaravelQueryBuilder\ValueResolvers\LikeAny;
 
 class UserFilter extends AbstractFilter
 {

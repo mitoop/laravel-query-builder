@@ -3,6 +3,7 @@
 namespace Mitoop\LaravelQueryBuilder\Support\Operators;
 
 use Illuminate\Database\Eloquent\Builder;
+use InvalidArgumentException;
 use Mitoop\LaravelQueryBuilder\Contracts\OperatorInterface;
 
 class DefaultOperator implements OperatorInterface
@@ -15,7 +16,7 @@ class DefaultOperator implements OperatorInterface
     public function apply(Builder $builder, string $whereType, string $field, $value): void
     {
         if ($this->invalidOperator($this->operator, $builder)) {
-            $this->operator = 'eq';
+            throw new InvalidArgumentException("Invalid operator [{$this->operator}].");
         }
 
         if (is_array($value)) {

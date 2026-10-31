@@ -13,6 +13,34 @@ class ValueHelper
         return $value === null || $value === '' || $value === [];
     }
 
+    /**
+     * @return list<mixed>
+     */
+    public static function listValues(mixed $value): array
+    {
+        if (is_string($value)) {
+            $value = explode(',', $value);
+        } elseif (! is_array($value)) {
+            $value = [$value];
+        }
+
+        $values = [];
+
+        foreach ($value as $item) {
+            if (is_string($item)) {
+                $item = trim($item);
+            }
+
+            if ($item === null || $item === '') {
+                continue;
+            }
+
+            $values[] = $item;
+        }
+
+        return $values;
+    }
+
     public static function resolveField(int|string $key, mixed $item, array $input): ?array
     {
         $field = is_int($key) ? $item : $key;

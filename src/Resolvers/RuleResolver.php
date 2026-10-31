@@ -3,7 +3,6 @@
 namespace Mitoop\LaravelQueryBuilder\Resolvers;
 
 use Closure;
-use Illuminate\Database\Eloquent\Attributes\Scope as ScopeAttr;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Query\Expression;
 use Illuminate\Support\Str;
@@ -77,19 +76,27 @@ class RuleResolver implements OperatorFactoryAwareInterface, RuleResolverInterfa
             return;
         }
 
-        $method = $scope->scopeName;
+        $method = Str::camel($scope->scopeName);
         $args = $scope->getArgs();
         $model = $this->builder->getModel();
-        $scopeMethod = 'scope'.Str::title($method);
+        $scopeMethod = 'scope'.ucfirst($method);
 
-        $hasScopeAttr = method_exists($model, $method)
-            && ! empty((new ReflectionMethod($model, $method))->getAttributes(ScopeAttr::class));
-
-        if (! method_exists($model, $scopeMethod) && ! $hasScopeAttr) {
-            throw new InvalidArgumentException("Invalid scope: $method");
+        if (! method_exists($model, $scopeMethod) && ! $this->hasScopeAttribute($model, $method)) {
+            throw new InvalidArgumentException("Invalid scope: {$scope->scopeName}");
         }
 
         $this->builder->{$method}(...$args);
+    }
+
+    protected function hasScopeAttribute(object $model, string $method): bool
+    {
+        $attribute = 'Illuminate\Database\Eloquent\Attributes\Scope';
+
+        if (! class_exists($attribute) || ! method_exists($model, $method)) {
+            return false;
+        }
+
+        return (new ReflectionMethod($model, $method))->getAttributes($attribute) !== [];
     }
 
     protected function makeComboQuery(Builder $builder, $field, $mix, $operatorAndValue): void

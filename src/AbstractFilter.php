@@ -20,13 +20,36 @@ abstract class AbstractFilter implements BuilderAwareInterface
 
     protected array $allowedSorts = ['id'];
 
+    protected string $sortField = 'sorts';
+
     protected array $resolvers = [];
 
     protected array $data;
 
     public function booting(): void {}
 
-    public function boot(): void {}
+    public function boot(): void
+    {
+        if (! method_exists($this, 'with')) {
+            return;
+        }
+
+        $method = new \ReflectionMethod($this, 'with');
+
+        if ($method->isPublic() || $method->isProtected()) {
+            $this->builder->with($this->with());
+        }
+    }
+
+    public function allowedSorts(): array
+    {
+        return $this->allowedSorts;
+    }
+
+    public function sortField(): string
+    {
+        return $this->sortField;
+    }
 
     public function setData(array $data): static
     {

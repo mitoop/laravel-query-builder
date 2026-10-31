@@ -1,0 +1,30 @@
+name: Tests
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - php: '8.2'
+            laravel: '^11.0'
+            security-blocking: '1'
+          - php: '8.2'
+            laravel: '^12.0'
+          - php: '8.3'
+            laravel: '^13.0'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: mbstring, dom, xml, curl, pdo_sqlite
+          coverage: none
+      - run: composer validate --strict --no-check-publish
+      - run: composer update --with 'laravel/framework:${{ matrix.laravel }}' --prefer-dist --no-interaction
+        env:
+          COMPOSER_NO_SECURITY_BLOCKING: ${{ matrix.security-blocking || '0' }}
+      - run: composer test
