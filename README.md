@@ -206,14 +206,14 @@ protected function rules(): array
 | `keyword=ada&keyword_type=email` | 只查 `email` |
 | `keyword=ada&keyword_type=other` | `name like`。`other` 不在 `columns` 里，所以用 `default` |
 
-字段有值时才追加一段查询，用 `whenValue()`。手写查询也走 `LikeClause`：`pattern()` 做转义，`where()` 和 `orWhere()` 加上 `ESCAPE`。
+字段有值时才追加一段查询，用 `whenValue()`。手写查询也走 `LikeClause`。`pattern()` 转义输入里的 `%`、`_` 和 `\`。后两个参数是前后缀，省略时两侧都是 `%`。下面只在后面加 `%`，输入 `ada` 时，`$pattern` 是 `ada%`。`where()` 和 `orWhere()` 加上 `ESCAPE`。
 
 ```php
 use Illuminate\Database\Eloquent\Builder;
 use Mitoop\LaravelQueryBuilder\Support\LikeClause;
 
 $this->whenValue('keyword', function (Builder $builder, string $keyword): void {
-    $pattern = LikeClause::pattern($keyword);
+    $pattern = LikeClause::pattern($keyword, '', '%');
 
     if ($pattern === '') {
         return;
@@ -224,7 +224,21 @@ $this->whenValue('keyword', function (Builder $builder, string $keyword): void {
 });
 ```
 
-自定义处理器实现 `Mitoop\LaravelQueryBuilder\Contracts\ValueResolver`，在 `resolve()` 里返回给操作符的值。
+要实现自己的值处理器，实现 `Mitoop\LaravelQueryBuilder\Contracts\ValueResolver`。`resolve()` 接收请求里的原始值，返回交给操作符使用的值。
+
+```php
+use Mitoop\LaravelQueryBuilder\Contracts\ValueResolver;
+
+class UpperName implements ValueResolver
+{
+    public function resolve($value): string
+    {
+        return strtoupper((string) $value);
+    }
+}
+```
+
+规则写成 `'name' => new UpperName` 时，等值比较用的就是 `resolve()` 的返回值。
 
 ## 关联、Scope 和原生条件
 
