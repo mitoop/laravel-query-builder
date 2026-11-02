@@ -325,6 +325,7 @@ namespace App\Http\Filters;
 
 use Illuminate\Database\Eloquent\Builder;
 use Mitoop\LaravelQueryBuilder\AbstractFilter;
+use Mitoop\LaravelQueryBuilder\LikeColumn;
 use Mitoop\LaravelQueryBuilder\Scope;
 use Mitoop\LaravelQueryBuilder\ValueResolvers\DateRange;
 use Mitoop\LaravelQueryBuilder\ValueResolvers\Like;
@@ -347,7 +348,13 @@ class UserFilter extends AbstractFilter
             'nickname:profile->nickname|like' => new Like,
             'tag:profile->tags|json_contains',
             'position$name|like' => new Like,
-            'keyword|like_any' => new LikeAny(['name', 'email']),
+            'q|like_any' => new LikeAny(['title', 'company']),
+            new LikeColumn(
+                field: 'keyword',
+                type: 'keyword_type',
+                columns: ['name', 'email', 'phone'],
+                default: 'name',
+            ),
             new Scope('active'),
             $this->whenValue('role_id', function (Builder $builder, int|string $roleId): void {
                 $builder->where('role_id', (int) $roleId);
