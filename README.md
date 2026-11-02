@@ -152,6 +152,7 @@ app(OperatorFactoryInterface::class)->register('before', fn () => new BeforeOper
 
 * `Mitoop\LaravelQueryBuilder\ValueResolvers\Like`：调用 `LikeClause::pattern()`，两侧加上 `%`，并转义输入里的 `%`、`_` 和 `\`
 * `Mitoop\LaravelQueryBuilder\ValueResolvers\LikeAny`：同一套 `LikeClause::pattern()`，匹配多个列
+* `Mitoop\LaravelQueryBuilder\LikeColumn`：同一个关键字按请求里的类型选一列。类型不在名单里时用默认列
 * `Mitoop\LaravelQueryBuilder\ValueResolvers\DateRange`：把两个日期转成当天的开始和结束。格式不对时这条规则跳过
 
 ```php
@@ -170,6 +171,40 @@ protected function rules(): array
 ```
 
 `Like` 的前后缀可以改，例如只匹配开头：`new Like('', '%')`。
+
+同一个关键字要按类型落到不同列时，用 `LikeColumn`。它直接放进 `rules()`，一次只查一列。
+
+```php
+use Mitoop\LaravelQueryBuilder\LikeColumn;
+
+protected function rules(): array
+{
+    return [
+        new LikeColumn(
+            field: 'keyword',
+            type: 'keyword_type',
+            columns: ['name', 'email', 'phone'],
+            default: 'name',
+        ),
+    ];
+}
+```
+
+| 参数 | 作用 |
+| --- | --- |
+| `field` | 关键字所在的请求字段 |
+| `type` | 列类型所在的请求字段 |
+| `columns` | 允许被选中的列。请求里的类型必须和其中一项完全一致 |
+| `default` | 没传类型、类型为空，或类型不在 `columns` 里时使用的列 |
+
+上面的规则对应这些请求：
+
+| 请求 | 查询 |
+| --- | --- |
+| `keyword=ada` | `name like` |
+| `keyword=ada&keyword_type=name` | `name like`。`name` 在 `columns` 里，按这个类型查询 |
+| `keyword=ada&keyword_type=email` | 只查 `email` |
+| `keyword=ada&keyword_type=other` | `name like`。`other` 不在 `columns` 里，所以用 `default` |
 
 字段有值时才追加一段查询，用 `whenValue()`。手写查询也走 `LikeClause`：`pattern()` 做转义，`where()` 和 `orWhere()` 加上 `ESCAPE`。
 

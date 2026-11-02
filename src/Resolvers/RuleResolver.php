@@ -9,6 +9,7 @@ use Illuminate\Support\Str;
 use InvalidArgumentException;
 use Mitoop\LaravelQueryBuilder\Contracts\OperatorFactoryAwareInterface;
 use Mitoop\LaravelQueryBuilder\Contracts\RuleResolverInterface;
+use Mitoop\LaravelQueryBuilder\LikeColumn;
 use Mitoop\LaravelQueryBuilder\Scope;
 use Mitoop\LaravelQueryBuilder\Support\RuleParser;
 use Mitoop\LaravelQueryBuilder\Traits\HasOperatorFactory;
@@ -37,6 +38,12 @@ class RuleResolver implements OperatorFactoryAwareInterface, RuleResolverInterfa
 
             if ($item instanceof Scope) {
                 $this->applyScope($item);
+
+                continue;
+            }
+
+            if ($item instanceof LikeColumn) {
+                $item->apply($this->builder, $this->input);
 
                 continue;
             }

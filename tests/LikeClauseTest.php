@@ -5,6 +5,7 @@ namespace Mitoop\LaravelQueryBuilder\Tests;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 use InvalidArgumentException;
+use Mitoop\LaravelQueryBuilder\LikeColumn;
 use Mitoop\LaravelQueryBuilder\Support\LikeClause;
 use Mitoop\LaravelQueryBuilder\Support\Operators\LikeOperator;
 use Mitoop\LaravelQueryBuilder\Tests\Fixtures\LikeUser;
@@ -150,6 +151,63 @@ class LikeClauseTest extends PackageTestCase
         })->orderBy('id')->pluck('name')->all();
 
         $this->assertSame(['project-hit'], $names);
+    }
+
+    public function test_like_column_uses_the_default_column_for_a_missing_or_unknown_type(): void
+    {
+        $rule = new LikeColumn(
+            field: 'keyword',
+            type: 'keyword_type',
+            columns: ['name', 'email', 'phone'],
+            default: 'name',
+        );
+
+        $missing = LikeUser::query()->filter([$rule], ['keyword' => 'ada']);
+        $unknown = LikeUser::query()->filter([$rule], [
+            'keyword' => 'ada',
+            'keyword_type' => 'other',
+        ]);
+
+        $this->assertStringContainsString('"name" like ? escape ?', $missing->toSql());
+        $this->assertStringNotContainsString('email', $missing->toSql());
+        $this->assertStringContainsString('"name" like ? escape ?', $unknown->toSql());
+    }
+
+    public function test_like_column_uses_an_allowed_column_and_escapes_the_keyword(): void
+    {
+        $builder = LikeUser::query()->filter([
+            new LikeColumn(
+                field: 'keyword',
+                type: 'keyword_type',
+                columns: ['name', 'email', 'phone'],
+                default: 'name',
+            ),
+        ], [
+            'keyword' => '100%_a',
+            'keyword_type' => 'email',
+        ]);
+
+        $this->assertStringContainsString('"email" like ? escape ?', $builder->toSql());
+        $this->assertStringNotContainsString('"name"', $builder->toSql());
+        $this->assertSame(['%100\%\_a%', '\\'], $builder->getBindings());
+    }
+
+    public function test_like_column_skips_an_empty_keyword(): void
+    {
+        $builder = LikeUser::query()->filter([
+            new LikeColumn(
+                field: 'keyword',
+                type: 'keyword_type',
+                columns: ['email'],
+                default: 'name',
+            ),
+        ], [
+            'keyword' => "\t",
+            'keyword_type' => 'email',
+        ]);
+
+        $this->assertSame([], $builder->getBindings());
+        $this->assertStringNotContainsString('like', $builder->toSql());
     }
 
     /**
