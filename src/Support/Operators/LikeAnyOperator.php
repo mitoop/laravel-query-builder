@@ -6,6 +6,7 @@ use Closure;
 use Illuminate\Database\Eloquent\Builder;
 use InvalidArgumentException;
 use Mitoop\LaravelQueryBuilder\Contracts\OperatorInterface;
+use Mitoop\LaravelQueryBuilder\Support\LikeClause;
 
 class LikeAnyOperator implements OperatorInterface
 {
@@ -20,12 +21,12 @@ class LikeAnyOperator implements OperatorInterface
         $builder->{"{$whereType}"}(function (Builder $query) use ($columns, $keyword) {
             foreach ($columns as $key => $column) {
                 if (is_int($key)) {
-                    $query->orWhere($column, 'like', $keyword);
+                    LikeClause::orWhere($query, $column, $keyword);
                 } elseif (is_array($column)) {
                     $relation = $key;
                     $query->orWhereHas($relation, function (Builder $q) use ($column, $keyword) {
                         foreach ($column as $relField) {
-                            $q->orWhere($relField, 'like', $keyword);
+                            LikeClause::orWhere($q, $relField, $keyword);
                         }
                     });
                 } elseif ($column instanceof Closure) {

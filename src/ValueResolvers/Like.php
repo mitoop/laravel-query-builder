@@ -3,6 +3,7 @@
 namespace Mitoop\LaravelQueryBuilder\ValueResolvers;
 
 use Mitoop\LaravelQueryBuilder\Contracts\ValueResolver;
+use Mitoop\LaravelQueryBuilder\Support\LikeClause;
 
 class Like implements ValueResolver
 {
@@ -10,16 +11,6 @@ class Like implements ValueResolver
 
     public function resolve($value): string
     {
-        $value = (string) $value;
-
-        $value = preg_replace('/[^\P{C}\n]+/u', '', $value) ?? '';
-
-        if ($value === '') {
-            return '';
-        }
-
-        $escaped = addcslashes($value, '\%_');
-
-        return $this->prefix.$escaped.$this->suffix;
+        return LikeClause::pattern((string) $value, $this->prefix, $this->suffix);
     }
 }

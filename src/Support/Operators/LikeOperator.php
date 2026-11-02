@@ -5,6 +5,7 @@ namespace Mitoop\LaravelQueryBuilder\Support\Operators;
 use Illuminate\Database\Eloquent\Builder;
 use InvalidArgumentException;
 use Mitoop\LaravelQueryBuilder\Contracts\OperatorInterface;
+use Mitoop\LaravelQueryBuilder\Support\LikeClause;
 
 class LikeOperator implements OperatorInterface
 {
@@ -16,6 +17,6 @@ class LikeOperator implements OperatorInterface
             throw new InvalidArgumentException('Keyword cannot be empty.');
         }
 
-        $builder->{$whereType}($field, 'like', $value);
+        LikeClause::apply($builder, $whereType, $field, $value);
     }
 }

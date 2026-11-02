@@ -118,7 +118,7 @@ protected function rules(): array
 | `gt` / `lt` | `>` / `<` |
 | `gte` / `ge` | `>=` |
 | `lte` / `le` | `<=` |
-| `like` | `like`。通配符由值处理器加上，操作符本身不包 `%` |
+| `like` | `like ? escape ?`。通配符由值处理器加上，操作符补上 `ESCAPE '\'` |
 | `in` / `not_in` | 数组，或 `1,2` 这种逗号分隔的字符串 |
 | `between` | 正好两个值，数组或 `start,end`。数量不对会抛异常 |
 | `is_null` / `not_null` | 请求值为真时才加上 `whereNull` / `whereNotNull` |
@@ -150,8 +150,8 @@ app(OperatorFactoryInterface::class)->register('before', fn () => new BeforeOper
 
 操作符只决定比较方式。`%`、日期边界这类转换交给值处理器。
 
-* `Mitoop\LaravelQueryBuilder\ValueResolvers\Like`：两侧加上 `%`，并转义输入里的 `%`、`_` 和 `\`
-* `Mitoop\LaravelQueryBuilder\ValueResolvers\LikeAny`：同一套转义，匹配多个列
+* `Mitoop\LaravelQueryBuilder\ValueResolvers\Like`：调用 `LikeClause::pattern()`，两侧加上 `%`，并转义输入里的 `%`、`_` 和 `\`
+* `Mitoop\LaravelQueryBuilder\ValueResolvers\LikeAny`：同一套 `LikeClause::pattern()`，匹配多个列
 * `Mitoop\LaravelQueryBuilder\ValueResolvers\DateRange`：把两个日期转成当天的开始和结束。格式不对时这条规则跳过
 
 ```php
@@ -171,17 +171,23 @@ protected function rules(): array
 
 `Like` 的前后缀可以改，例如只匹配开头：`new Like('', '%')`。
 
-字段有值时才追加一段查询，用 `whenValue()`：
+字段有值时才追加一段查询，用 `whenValue()`。手写查询也走 `LikeClause`：`pattern()` 做转义，`where()` 和 `orWhere()` 加上 `ESCAPE`。
 
 ```php
 use Illuminate\Database\Eloquent\Builder;
+use Mitoop\LaravelQueryBuilder\Support\LikeClause;
 
 $this->whenValue('keyword', function (Builder $builder, string $keyword): void {
-    $builder->whereAny(['name', 'email'], 'like', '%'.$keyword.'%');
+    $pattern = LikeClause::pattern($keyword);
+
+    if ($pattern === '') {
+        return;
+    }
+
+    LikeClause::where($builder, 'name', $pattern);
+    LikeClause::orWhere($builder, 'email', $pattern);
 });
 ```
-
-这里的 `%` 不会自动转义。用户输入里可能带有通配符时，用 `Like` 或 `LikeAny`。
 
 自定义处理器实现 `Mitoop\LaravelQueryBuilder\Contracts\ValueResolver`，在 `resolve()` 里返回给操作符的值。
 

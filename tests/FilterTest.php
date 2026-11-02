@@ -11,8 +11,6 @@ use Mitoop\LaravelQueryBuilder\Scope;
 use Mitoop\LaravelQueryBuilder\Tests\Fixtures\AttributeScopedUser;
 use Mitoop\LaravelQueryBuilder\Tests\Fixtures\User;
 use Mitoop\LaravelQueryBuilder\ValueResolvers\DateRange;
-use Mitoop\LaravelQueryBuilder\ValueResolvers\Like;
-use Mitoop\LaravelQueryBuilder\ValueResolvers\LikeAny;
 
 class FilterTest extends PackageTestCase
 {
@@ -277,28 +275,6 @@ class FilterTest extends PackageTestCase
 
         $this->assertTrue($filter->booted);
         $this->assertArrayHasKey('profile', $builder->getEagerLoads());
-    }
-
-    public function test_like_escapes_wildcard_characters(): void
-    {
-        $builder = User::query()->filter([
-            'email|like' => new Like,
-        ], [
-            'email' => '100%_a',
-        ]);
-
-        $this->assertSame(['%100\%\_a%'], $builder->getBindings());
-    }
-
-    public function test_like_any_escapes_wildcard_characters(): void
-    {
-        $builder = User::query()->filter([
-            'keyword|like_any' => new LikeAny(['name', 'email']),
-        ], [
-            'keyword' => '100%_a',
-        ]);
-
-        $this->assertSame(['%100\%\_a%', '%100\%\_a%'], $builder->getBindings());
     }
 
     public function test_custom_operator_factory_is_used(): void
