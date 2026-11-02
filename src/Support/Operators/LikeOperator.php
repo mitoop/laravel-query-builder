@@ -16,6 +16,13 @@ class LikeOperator implements OperatorInterface
             throw new InvalidArgumentException('Keyword cannot be empty.');
         }
 
+        if ($builder->getConnection()->getDriverName() === 'sqlite') {
+            $column = $builder->getQuery()->getGrammar()->wrap($field);
+            $builder->{"{$whereType}Raw"}("{$column} like ? escape '\\'", [$value]);
+
+            return;
+        }
+
         $builder->{$whereType}($field, 'like', $value);
     }
 }

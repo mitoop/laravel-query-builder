@@ -17,15 +17,17 @@ class LikeAnyOperator implements OperatorInterface
             throw new InvalidArgumentException('Keyword cannot be empty.');
         }
 
-        $builder->{"{$whereType}"}(function (Builder $query) use ($columns, $keyword) {
+        $like = new LikeOperator;
+
+        $builder->{"{$whereType}"}(function (Builder $query) use ($columns, $keyword, $like) {
             foreach ($columns as $key => $column) {
                 if (is_int($key)) {
-                    $query->orWhere($column, 'like', $keyword);
+                    $like->apply($query, 'orWhere', $column, $keyword);
                 } elseif (is_array($column)) {
                     $relation = $key;
-                    $query->orWhereHas($relation, function (Builder $q) use ($column, $keyword) {
+                    $query->orWhereHas($relation, function (Builder $q) use ($column, $keyword, $like) {
                         foreach ($column as $relField) {
-                            $q->orWhere($relField, 'like', $keyword);
+                            $like->apply($q, 'orWhere', $relField, $keyword);
                         }
                     });
                 } elseif ($column instanceof Closure) {
