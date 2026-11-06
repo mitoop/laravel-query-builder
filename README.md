@@ -121,6 +121,7 @@ protected function rules(): array
 | `like` | `like ? escape ?`。通配符由值处理器加上，操作符补上 `ESCAPE '\'` |
 | `in` / `not_in` | 数组，或 `1,2` 这种逗号分隔的字符串 |
 | `between` | 正好两个值，数组或 `start,end`。数量不对会抛异常 |
+| `cascade` | 级联下拉。选中几级，就同时查前几列。`[1, 2]` 会查第一列和第二列 |
 | `is_null` / `not_null` | 请求值为真时才加上 `whereNull` / `whereNotNull` |
 | `json_contains` | JSON 包含 |
 
@@ -153,10 +154,12 @@ app(OperatorFactoryInterface::class)->register('before', fn () => new BeforeOper
 * `Mitoop\LaravelQueryBuilder\ValueResolvers\Like`：调用 `LikeClause::pattern()`，两侧加上 `%`，并转义输入里的 `%`、`_` 和 `\`
 * `Mitoop\LaravelQueryBuilder\ValueResolvers\LikeAny`：同一套 `LikeClause::pattern()`，匹配多个列
 * `Mitoop\LaravelQueryBuilder\LikeColumn`：同一个关键字按请求里的类型选一列。类型不在名单里时用默认列
+* `Mitoop\LaravelQueryBuilder\ValueResolvers\Cascade`：配合 `cascade`，把级联下拉的选中路径按顺序对应到多级列，传入几级就查前几列
 * `Mitoop\LaravelQueryBuilder\ValueResolvers\DateRange`：把两个日期转成当天的开始和结束。格式不对时这条规则跳过
 
 ```php
 use Mitoop\LaravelQueryBuilder\ValueResolvers\DateRange;
+use Mitoop\LaravelQueryBuilder\ValueResolvers\Cascade;
 use Mitoop\LaravelQueryBuilder\ValueResolvers\Like;
 use Mitoop\LaravelQueryBuilder\ValueResolvers\LikeAny;
 
@@ -165,12 +168,22 @@ protected function rules(): array
     return [
         'email|like' => new Like,
         'keyword|like_any' => new LikeAny(['name', 'email']),
+        'area_id|cascade' => new Cascade(['province_id', 'city_id', 'district_id']),
         'created_at|between' => new DateRange,
     ];
 }
 ```
 
 `Like` 的前后缀可以改，例如只匹配开头：`new Like('', '%')`。
+
+级联下拉的选中路径要按层级同时查询时，用 `cascade`。列名按层级顺序写，例如省、市、区。传入几级，就同时加上前几列的条件，每一级的值对应该位置的列。空字符串会被去掉，和 `in` 一样。单个值或 `1,2,3` 这种逗号分隔的字符串同样按顺序处理。值比列多时，多出来的值忽略。
+
+| `area_id` | 查询 |
+| --- | --- |
+| `[1]` 或 `1` | `province_id = 1` |
+| `[1, 2]` 或 `1,2` | `province_id = 1` 且 `city_id = 2` |
+| `[1, 2, 3]` | `province_id = 1` 且 `city_id = 2` 且 `district_id = 3` |
+| `[1, 2, 3, 4]` | 只查前三列，`4` 忽略 |
 
 同一个关键字要按类型落到不同列时，用 `LikeColumn`。它直接放进 `rules()`，一次只查一列。
 
@@ -341,6 +354,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Mitoop\LaravelQueryBuilder\AbstractFilter;
 use Mitoop\LaravelQueryBuilder\LikeColumn;
 use Mitoop\LaravelQueryBuilder\Scope;
+use Mitoop\LaravelQueryBuilder\ValueResolvers\Cascade;
 use Mitoop\LaravelQueryBuilder\ValueResolvers\DateRange;
 use Mitoop\LaravelQueryBuilder\ValueResolvers\Like;
 use Mitoop\LaravelQueryBuilder\ValueResolvers\LikeAny;
@@ -363,6 +377,7 @@ class UserFilter extends AbstractFilter
             'tag:profile->tags|json_contains',
             'position$name|like' => new Like,
             'q|like_any' => new LikeAny(['title', 'company']),
+            'area_id|cascade' => new Cascade(['province_id', 'city_id', 'district_id']),
             new LikeColumn(
                 field: 'keyword',
                 type: 'keyword_type',

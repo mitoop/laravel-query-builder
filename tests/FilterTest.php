@@ -10,6 +10,7 @@ use Mitoop\LaravelQueryBuilder\Contracts\OperatorInterface;
 use Mitoop\LaravelQueryBuilder\Scope;
 use Mitoop\LaravelQueryBuilder\Tests\Fixtures\AttributeScopedUser;
 use Mitoop\LaravelQueryBuilder\Tests\Fixtures\User;
+use Mitoop\LaravelQueryBuilder\ValueResolvers\Cascade;
 use Mitoop\LaravelQueryBuilder\ValueResolvers\DateRange;
 
 class FilterTest extends PackageTestCase
@@ -92,6 +93,69 @@ class FilterTest extends PackageTestCase
         $this->expectExceptionMessage('Between operator requires exactly two values.');
 
         User::query()->filter(['created_at|between'], ['created_at' => '2024-01-01']);
+    }
+
+    public function test_cascade_filter_uses_the_column_matching_the_value_count(): void
+    {
+        $rule = [
+            'area_id|cascade' => new Cascade(['province_id', 'city_id', 'district_id']),
+        ];
+
+        $province = User::query()->filter($rule, ['area_id' => [1]]);
+        $city = User::query()->filter($rule, ['area_id' => [1, 2]]);
+        $district = User::query()->filter($rule, ['area_id' => '1,2,3']);
+        $scalar = User::query()->filter($rule, ['area_id' => 8]);
+        $withBlank = User::query()->filter($rule, ['area_id' => [1, '', 3]]);
+
+        $this->assertStringContainsString('province_id', $province->toSql());
+        $this->assertStringNotContainsString('city_id', $province->toSql());
+        $this->assertSame([1], $province->getBindings());
+
+        $this->assertStringContainsString('province_id', $city->toSql());
+        $this->assertStringContainsString('city_id', $city->toSql());
+        $this->assertStringNotContainsString('district_id', $city->toSql());
+        $this->assertSame([1, 2], $city->getBindings());
+
+        $this->assertStringContainsString('province_id', $district->toSql());
+        $this->assertStringContainsString('city_id', $district->toSql());
+        $this->assertStringContainsString('district_id', $district->toSql());
+        $this->assertSame(['1', '2', '3'], $district->getBindings());
+
+        $this->assertStringContainsString('province_id', $scalar->toSql());
+        $this->assertSame([8], $scalar->getBindings());
+
+        $this->assertStringContainsString('province_id', $withBlank->toSql());
+        $this->assertStringContainsString('city_id', $withBlank->toSql());
+        $this->assertSame([1, 3], $withBlank->getBindings());
+    }
+
+    public function test_cascade_filter_ignores_values_past_the_columns(): void
+    {
+        $builder = User::query()->filter([
+            'area_id|cascade' => new Cascade(['province_id', 'city_id']),
+        ], [
+            'area_id' => [1, 2, 3],
+        ]);
+
+        $this->assertStringContainsString('province_id', $builder->toSql());
+        $this->assertStringContainsString('city_id', $builder->toSql());
+        $this->assertSame([1, 2], $builder->getBindings());
+    }
+
+    public function test_cascade_operator_requires_the_cascade_resolver(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Cascade operator requires the Cascade value resolver.');
+
+        User::query()->filter(['area_id|cascade'], ['area_id' => [1, 2]]);
+    }
+
+    public function test_cascade_resolver_requires_a_list_of_columns(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Cascade resolver requires a list of columns.');
+
+        new Cascade([]);
     }
 
     public function test_camel_case_scope_name_calls_the_scope_method(): void

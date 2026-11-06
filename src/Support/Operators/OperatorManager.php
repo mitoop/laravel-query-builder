@@ -47,6 +47,11 @@ class OperatorManager extends Manager implements OperatorFactoryInterface
         return new BetweenOperator;
     }
 
+    protected function createCascadeDriver()
+    {
+        return new CascadeOperator;
+    }
+
     protected function createIsNullDriver()
     {
         return new IsNullOperator;
